@@ -624,7 +624,7 @@
 
                 <div class="controls">
                     <button class="btn btn-primary" onclick="checkAnswer()">判定</button>
-                    <button class="btn btn-secondary" onclick="newProblem()">新しい問題</button>
+                    <button class="btn btn-secondary" id="new-problem-btn" onclick="newProblem()" style="display:none">新しい問題</button>
                 </div>
             </div>
 
@@ -1673,6 +1673,9 @@
                 selectedTile = null;
                 const feedbackEl = document.getElementById('feedback');
                 if (feedbackEl) feedbackEl.classList.remove('show');
+                // 「新しい問題」ボタンを非表示にリセット
+                const newProblemBtn = document.getElementById('new-problem-btn');
+                if (newProblemBtn) newProblemBtn.style.display = 'none';
             } catch (error) {
                 console.error('newProblem エラー:', error);
             }
@@ -1787,6 +1790,9 @@
                 displaySmallTiles(safeTiles, document.getElementById('safe-alternatives'));
                 displaySmallTiles(dangerousTiles, document.getElementById('dangerous-alternatives'));
             }, 100);
+
+            // 判定後に「新しい問題」ボタンを表示
+            document.getElementById('new-problem-btn').style.display = '';
         }
 
         // ========================================
