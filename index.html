@@ -9,8 +9,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
+        [hidden] { display: none !important; }
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Arial', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
             margin: 0;
             padding: 20px;
             background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
@@ -27,542 +30,207 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #2d5a27;
+        .header { text-align: center; margin-bottom: 30px; color: #2d5a27; }
+        .header h1 { margin: 0.4em 0; }
+
+        .score-display {
+            display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+            margin-top: 10px; font-size: 16px; font-weight: bold; color: #2d5a27;
         }
+        .score-display span { color: #d32f2f; }
 
         /* --- Google ログイン --- */
         .auth-section {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            background: #f0f0f0;
-            border-radius: 10px;
+            display: flex; justify-content: flex-end; align-items: center;
+            gap: 12px; margin-bottom: 15px; padding: 10px 15px;
+            background: #f0f0f0; border-radius: 10px;
         }
-        .auth-section .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-        .auth-section .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid #4caf50;
-        }
+        .auth-section .user-info { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .auth-section .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #4caf50; }
         .btn-google {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 18px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 18px; border: 1px solid #ddd; border-radius: 8px;
+            background: white; font-size: 14px; font-weight: bold; cursor: pointer;
             transition: box-shadow 0.2s;
         }
-        .btn-google:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .btn-google img {
-            width: 20px; height: 20px;
-        }
+        .btn-google:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
         .btn-logout {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            background: #e0e0e0;
-            cursor: pointer;
-            font-size: 13px;
+            padding: 8px 16px; border: none; border-radius: 8px;
+            background: #e0e0e0; cursor: pointer; font-size: 13px;
         }
         .btn-logout:hover { background: #ccc; }
 
         /* --- モードタブ --- */
         .mode-tabs {
-            display: flex;
-            gap: 0;
-            margin-bottom: 25px;
-            border-bottom: 3px solid #4caf50;
+            display: flex; margin-bottom: 25px; border-bottom: 3px solid #4caf50;
+            flex-wrap: wrap;
         }
         .mode-tab {
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            background: #e8e8e8;
-            border-radius: 10px 10px 0 0;
-            transition: background 0.2s;
-            position: relative;
-            bottom: -3px;
+            padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer;
+            border: none; background: #e8e8e8; border-radius: 10px 10px 0 0;
+            transition: background 0.2s; position: relative; bottom: -3px;
             border-bottom: 3px solid transparent;
         }
         .mode-tab:hover { background: #d0d0d0; }
-        .mode-tab.active {
-            background: #4caf50;
-            color: white;
-            border-bottom: 3px solid #4caf50;
-        }
+        .mode-tab.active { background: #4caf50; color: white; border-bottom: 3px solid #4caf50; }
         .mode-tab .badge {
-            display: inline-block;
-            background: #f44336;
-            color: white;
-            font-size: 11px;
-            padding: 1px 7px;
-            border-radius: 10px;
-            margin-left: 6px;
-            vertical-align: top;
+            display: inline-block; background: #f44336; color: white; font-size: 11px;
+            padding: 1px 7px; border-radius: 10px; margin-left: 6px; vertical-align: top;
         }
 
-        .game-area {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
+        :focus-visible { outline: 3px solid #ffeb3b; outline-offset: 2px; }
 
-        .discards-section {
-            background: #f8f8f8;
-            padding: 20px;
-            border-radius: 10px;
-            border: 2px solid #ddd;
-        }
+        .game-area { display: flex; flex-direction: column; gap: 30px; }
 
-        .discards-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #d32f2f;
+        .difficulty-bar {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            font-weight: bold; color: #2d5a27;
         }
+        .diff-btn {
+            padding: 8px 16px; border: 2px solid #4caf50; border-radius: 20px;
+            background: white; color: #2e7d32; font-weight: bold; cursor: pointer;
+        }
+        .diff-btn.active { background: #4caf50; color: white; }
+        .diff-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .discards {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
+        .discards-section { background: #f8f8f8; padding: 20px; border-radius: 10px; border: 2px solid #ddd; }
+        .discards-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #d32f2f; }
+
+        .discards, .hand, .safe-tiles, .dangerous-tiles, .wait-tiles {
+            display: flex; flex-wrap: wrap; gap: 5px;
         }
 
         .tile {
-            width: 50px;
-            height: 70px;
-            background: white;
-            border: 2px solid #333;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            padding: 2px;
-            box-sizing: border-box;
+            width: 50px; height: 70px; background: white; border: 2px solid #333;
+            border-radius: 6px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; font-size: 12px;
+            font-weight: bold; cursor: pointer; transition: all 0.2s ease;
+            position: relative; padding: 2px; box-sizing: border-box; overflow: hidden;
         }
+        .tile:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .tile.not-selectable { cursor: default; opacity: 0.95; }
+        .tile.not-selectable:hover { transform: none; box-shadow: none; }
+        .tile.selected { background: #ffeb3b; border-color: #f57f17; }
+        .tile-image { width: 100%; height: 100%; object-fit: contain; }
+        .tile-pattern { font-size: 14px; font-weight: bold; text-align: center; line-height: 1.2; }
+        .man-pattern { font-size: 12px; color: #d32f2f; font-weight: bold; }
+        .pin-pattern { color: #1976d2; font-size: 16px; line-height: 0.8; }
+        .sou-pattern { color: #388e3c; font-size: 12px; line-height: 0.9; }
+        .small-tile { width: 35px; height: 45px; font-size: 8px; }
+        .small-tile .tile-pattern { font-size: 8px; }
+        .small-tile .man-pattern { font-size: 8px; }
+        .small-tile .pin-pattern { font-size: 12px; }
+        .small-tile .sou-pattern { font-size: 8px; }
 
-        .tile:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
+        .hand-section { background: #e8f5e8; padding: 20px; border-radius: 10px; border: 2px solid #4caf50; }
+        .hand-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #2e7d32; }
+        .hand { margin-bottom: 20px; }
 
-        .tile.not-selectable {
-            cursor: default;
-            opacity: 0.95;
-        }
-
-        .tile.not-selectable:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        .tile.selected {
-            background: #ffeb3b;
-            border-color: #f57f17;
-        }
-
-        .tile-pattern {
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        .small-tile .tile-pattern {
-            font-size: 10px;
-        }
-
-        .man-pattern {
-            font-size: 12px;
-            color: #d32f2f;
-            font-weight: bold;
-        }
-
-        .small-tile .man-pattern {
-            font-size: 8px;
-        }
-
-        .pin-pattern {
-            color: #1976d2;
-            font-size: 16px;
-            line-height: 0.8;
-        }
-
-        .small-tile .pin-pattern {
-            font-size: 12px;
-        }
-
-        .sou-pattern {
-            color: #388e3c;
-            font-size: 12px;
-            line-height: 0.9;
-        }
-
-        .small-tile .sou-pattern {
-            font-size: 8px;
-        }
-
-        .hand-section {
-            background: #e8f5e8;
-            padding: 20px;
-            border-radius: 10px;
-            border: 2px solid #4caf50;
-        }
-
-        .hand-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #2e7d32;
-        }
-
-        .hand {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 20px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
-        }
+        .controls { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
 
         .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px;
+            font-weight: bold; cursor: pointer; transition: all 0.2s ease;
         }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-sm { padding: 6px 14px; font-size: 13px; }
+        .btn-primary { background: #4caf50; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #45a049; }
+        .btn-secondary { background: #2196f3; color: white; }
+        .btn-secondary:hover:not(:disabled) { background: #1976d2; }
+        .btn-warning { background: #ff9800; color: white; }
+        .btn-warning:hover:not(:disabled) { background: #f57c00; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-danger:hover:not(:disabled) { background: #d32f2f; }
+        .btn-hint { background: #8e24aa; color: white; font-size: 14px; padding: 10px 18px; }
+        .btn-hint:hover:not(:disabled) { background: #7b1fa2; }
+        .hint-controls { text-align: center; }
 
-        .btn-primary {
-            background: #4caf50;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #45a049;
-        }
-
-        .btn-secondary {
-            background: #2196f3;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #1976d2;
-        }
-
-        .btn-warning {
-            background: #ff9800;
-            color: white;
-        }
-        .btn-warning:hover {
-            background: #f57c00;
-        }
-
-        .btn-danger {
-            background: #f44336;
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #d32f2f;
-        }
-
-        .feedback {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-        }
-
-        .feedback.show {
-            display: block;
-        }
-
-        .feedback.correct {
-            background: #e8f5e8;
-            border: 2px solid #4caf50;
-            color: #2e7d32;
-        }
-
-        .feedback.incorrect {
-            background: #ffebee;
-            border: 2px solid #f44336;
-            color: #c62828;
-        }
-
-        .feedback.neutral {
-            background: #f3f3f3;
-            border: 2px solid #666;
-            color: #333;
-        }
-
-        .feedback-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .alternatives {
-            margin-top: 15px;
-        }
-
-        .alternatives-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .safe-tiles, .dangerous-tiles {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin: 10px 0;
-        }
-
-        .small-tile {
-            width: 35px;
-            height: 45px;
-            font-size: 8px;
-        }
-
-        .small-tile .tile-pattern {
-            font-size: 8px;
-        }
-
-        .situation-section {
-            background: #fff8e1;
-            padding: 20px;
-            border-radius: 10px;
-            border: 2px solid #ffc107;
-            margin-bottom: 20px;
-        }
-
-        .situation-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #f57c00;
-        }
-
-        .situation-info {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .situation-offensive {
-            background: #ffebee;
-            border-color: #f44336;
-        }
-
-        .situation-offensive .situation-title {
-            color: #d32f2f;
-        }
-
-        .situation-defensive {
-            background: #e8f5e8;
-            border-color: #4caf50;
-        }
-
-        .situation-defensive .situation-title {
-            color: #2e7d32;
-        }
-
-        .shanten-info {
-            font-weight: bold;
-            color: #1976d2;
-            margin-bottom: 10px;
-        }
-
-        .strategy-info {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
+        .feedback { margin-top: 30px; padding: 20px; border-radius: 10px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct { background: #e8f5e8; border: 2px solid #4caf50; color: #2e7d32; }
+        .feedback.incorrect { background: #ffebee; border: 2px solid #f44336; color: #c62828; }
+        .feedback.neutral { background: #f3f3f3; border: 2px solid #666; color: #333; }
+        .feedback-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .judge-line { font-size: 16px; margin-bottom: 10px; }
+        .alternatives { margin-top: 15px; }
+        .alternatives-title { font-weight: bold; margin: 10px 0; }
+        .safe-tiles, .dangerous-tiles { margin: 10px 0; }
 
         .explanation {
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(0,0,0,0.05);
-            border-radius: 5px;
-            line-height: 1.6;
+            margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05);
+            border-radius: 5px; line-height: 1.6;
         }
 
+        .table-wrap { overflow-x: auto; }
+        .explain-table { width: 100%; border-collapse: collapse; font-size: 14px; background: white; color: #333; }
+        .explain-table th, .explain-table td {
+            border-bottom: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: middle;
+        }
+        .explain-table th { background: #f5f5f5; white-space: nowrap; }
+        .verdict-badge { padding: 2px 10px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; white-space: nowrap; }
+        .verdict-badge.optimal { background: #4caf50; }
+        .verdict-badge.acceptable { background: #ff9800; }
+        .verdict-badge.dangerous { background: #f44336; }
+
+        .situation-section { background: #fff8e1; padding: 20px; border-radius: 10px; border: 2px solid #ffc107; }
+        .situation-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #f57c00; }
+        .situation-info { font-size: 16px; line-height: 1.6; }
+        .situation-offensive { background: #ffebee; border-color: #f44336; }
+        .situation-offensive .situation-title { color: #d32f2f; }
+        .situation-defensive { background: #e8f5e8; border-color: #4caf50; }
+        .situation-defensive .situation-title { color: #2e7d32; }
+        .shanten-info { font-weight: bold; color: #1976d2; margin-bottom: 10px; }
+        .strategy-info { font-weight: bold; margin-bottom: 10px; }
+        .hint-label { font-weight: bold; margin: 12px 0 6px; }
+
         /* --- 復習モード --- */
-        .review-panel {
-            display: none;
-        }
-        .review-panel.active {
-            display: block;
-        }
-        .review-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        .review-actions { display: flex; gap: 10px; margin-bottom: 20px; }
+        .review-list { display: flex; flex-direction: column; gap: 12px; }
         .review-card {
-            background: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
+            background: #fff; border: 2px solid #e0e0e0; border-radius: 10px;
+            padding: 16px; cursor: pointer; transition: all 0.2s;
         }
-        .review-card:hover {
-            border-color: #f44336;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        .review-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .review-card-date {
-            font-size: 13px;
-            color: #888;
-        }
-        .review-card-strategy {
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-        }
+        .review-card:hover { border-color: #f44336; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .review-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .review-card-date { font-size: 13px; color: #888; }
+        .review-card-strategy { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
         .review-card-strategy.offensive { background: #f44336; }
         .review-card-strategy.defensive { background: #4caf50; }
         .review-card-strategy.balanced { background: #ff9800; }
-        .review-card-tiles {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            margin-top: 8px;
-        }
-        .review-card-info {
-            font-size: 14px;
-            margin: 5px 0;
-        }
-        .review-empty {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-            font-size: 16px;
-        }
-        .review-actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
+        .review-card-info { font-size: 14px; margin: 5px 0; }
+        .review-card-buttons { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+        .review-empty { text-align: center; padding: 40px; color: #999; font-size: 16px; }
         .similar-badge {
-            display: inline-block;
-            background: #9c27b0;
-            color: white;
-            font-size: 12px;
-            padding: 2px 10px;
-            border-radius: 10px;
-            margin-left: 8px;
+            display: inline-block; background: #9c27b0; color: white; font-size: 12px;
+            padding: 2px 10px; border-radius: 10px; margin-left: 8px;
         }
 
-        /* Firebase設定案内 */
-        .firebase-setup-notice {
-            background: #fff3e0;
-            border: 2px solid #ff9800;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        .firebase-setup-notice h3 {
-            color: #e65100;
-            margin-top: 0;
-        }
-        .firebase-setup-notice code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 13px;
-        }
-        .firebase-setup-notice ol {
-            line-height: 2;
-        }
+        /* --- 成績 --- */
+        .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: #f8f8f8; border: 2px solid #e0e0e0; border-radius: 10px; padding: 14px; text-align: center; }
+        .stat-card .value { font-size: 24px; font-weight: bold; color: #2e7d32; }
+        .stat-card .label { font-size: 13px; color: #666; }
+        .stats-section { margin-bottom: 24px; }
+        .stats-section h3 { color: #2d5a27; border-left: 5px solid #4caf50; padding-left: 10px; }
+        .stat-row { display: grid; grid-template-columns: 90px 1fr 150px; gap: 10px; align-items: center; margin: 8px 0; font-size: 14px; }
+        .bar-track { background: #e0e0e0; border-radius: 6px; height: 14px; overflow: hidden; }
+        .bar-fill { background: linear-gradient(90deg, #4caf50, #2e7d32); height: 100%; }
+        .empty-msg { text-align: center; color: #999; padding: 30px; }
+        .stats-note { font-size: 13px; color: #888; }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-                margin: 5px;
-            }
-
-            .tile {
-                width: 45px;
-                height: 60px;
-                font-size: 10px;
-                border-width: 1px;
-            }
-
-            .small-tile {
-                width: 30px;
-                height: 40px;
-            }
-
-            .controls {
-                flex-direction: column;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .btn {
-                width: 200px;
-                padding: 15px 20px;
-                font-size: 16px;
-            }
-
-            .auth-section {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-            }
-
-            .mode-tabs {
-                flex-wrap: wrap;
-            }
-            .mode-tab {
-                flex: 1;
-                min-width: 100px;
-                text-align: center;
-                font-size: 14px;
-                padding: 10px 12px;
-            }
+            .container { padding: 10px; margin: 5px; }
+            .tile { width: 45px; height: 60px; font-size: 10px; border-width: 1px; }
+            .small-tile { width: 30px; height: 40px; }
+            .controls { flex-direction: column; align-items: center; gap: 10px; }
+            .btn { width: 200px; padding: 15px 20px; font-size: 16px; }
+            .auth-section { flex-direction: column; align-items: stretch; text-align: center; }
+            .mode-tab { flex: 1; min-width: 100px; text-align: center; font-size: 14px; padding: 10px 12px; }
+            .stat-row { grid-template-columns: 70px 1fr 100px; font-size: 13px; }
+            .explain-table { font-size: 12px; }
+            .explain-table .col-risk { display: none; }
+            .explain-table td:nth-child(4) { min-width: 150px; }
         }
     </style>
 </head>
@@ -572,11 +240,11 @@
         <div class="auth-section" id="auth-section">
             <div id="auth-logged-out">
                 <button class="btn-google" onclick="googleLogin()">
-                    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
                     Googleでログイン
                 </button>
             </div>
-            <div id="auth-logged-in" style="display:none;">
+            <div id="auth-logged-in" hidden>
                 <div class="user-info">
                     <img id="user-avatar" class="user-avatar" src="" alt="">
                     <span id="user-name"></span>
@@ -589,27 +257,35 @@
             <h1>麻雀安全牌選択練習</h1>
             <p>相手の捨て牌を見て、状況に応じた適切な牌を選択しましょう</p>
             <div class="score-display">
-                <div class="current-score">現在のスコア: <span id="current-score">0</span>pt</div>
-                <div class="total-score">累計スコア: <span id="total-score">0</span>pt</div>
+                <div>現在のスコア: <span id="current-score">0</span>pt</div>
+                <div>累計スコア: <span id="total-score">0</span>pt</div>
             </div>
         </div>
 
         <!-- モード切替タブ -->
-        <div class="mode-tabs">
-            <button class="mode-tab active" onclick="switchMode('practice')" id="tab-practice">練習モード</button>
-            <button class="mode-tab" onclick="switchMode('review')" id="tab-review">
-                復習モード<span class="badge" id="review-badge" style="display:none;">0</span>
+        <nav class="mode-tabs" role="tablist">
+            <button class="mode-tab active" data-mode="practice" role="tab" aria-selected="true" onclick="switchMode('practice')">練習モード</button>
+            <button class="mode-tab" data-mode="review" role="tab" aria-selected="false" onclick="switchMode('review')">
+                復習モード<span class="badge" id="review-badge" hidden>0</span>
             </button>
-        </div>
+            <button class="mode-tab" data-mode="stats" role="tab" aria-selected="false" onclick="switchMode('stats')">成績</button>
+        </nav>
 
         <!-- 練習モードパネル -->
         <div id="practice-panel" class="game-area">
+            <div class="difficulty-bar">
+                <span>難易度:</span>
+                <button class="diff-btn" data-diff="beginner" onclick="setDifficulty('beginner')">初級</button>
+                <button class="diff-btn" data-diff="intermediate" onclick="setDifficulty('intermediate')">中級</button>
+                <button class="diff-btn" data-diff="advanced" onclick="setDifficulty('advanced')">上級</button>
+            </div>
+
             <div class="discards-section">
                 <div class="discards-title">相手の捨て牌</div>
                 <div class="discards" id="discards"></div>
             </div>
 
-            <div class="situation-section" id="situation-section" style="display: none;">
+            <div class="situation-section" id="situation-section" hidden>
                 <div class="situation-title">あなたの状況（ヒント）</div>
                 <div class="situation-info" id="situation-info"></div>
             </div>
@@ -623,8 +299,8 @@
                 <div class="hand" id="hand"></div>
 
                 <div class="controls">
-                    <button class="btn btn-primary" onclick="checkAnswer()">判定</button>
-                    <button class="btn btn-secondary" id="new-problem-btn" onclick="newProblem()" style="display:none">新しい問題</button>
+                    <button class="btn btn-primary" id="check-btn" onclick="checkPracticeAnswer()">判定</button>
+                    <button class="btn btn-secondary" id="new-problem-btn" onclick="newPracticeProblem()" hidden>新しい問題</button>
                 </div>
             </div>
 
@@ -635,24 +311,26 @@
         </div>
 
         <!-- 復習モードパネル -->
-        <div id="review-panel" class="review-panel">
-            <div class="review-actions">
-                <button class="btn btn-danger" onclick="clearAllReviews()">全て削除</button>
+        <div id="review-panel" hidden>
+            <div id="review-list-view">
+                <div class="review-actions">
+                    <button class="btn btn-danger btn-sm" onclick="clearAllReviews()">全て削除</button>
+                </div>
+                <div class="review-list" id="review-list"></div>
             </div>
-            <div class="review-list" id="review-list"></div>
 
             <!-- 復習中の問題表示エリア -->
-            <div id="review-game-area" class="game-area" style="display:none;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div id="review-game-area" class="game-area" hidden>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                     <h3 id="review-mode-title" style="margin:0;color:#d32f2f;">復習問題</h3>
-                    <button class="btn btn-secondary" onclick="backToReviewList()">一覧に戻る</button>
+                    <button class="btn btn-secondary btn-sm" onclick="backToReviewList()">一覧に戻る</button>
                 </div>
                 <div class="discards-section">
                     <div class="discards-title">相手の捨て牌</div>
                     <div class="discards" id="review-discards"></div>
                 </div>
 
-                <div class="situation-section" id="review-situation-section" style="display:none;">
+                <div class="situation-section" id="review-situation-section" hidden>
                     <div class="situation-title">あなたの状況（ヒント）</div>
                     <div class="situation-info" id="review-situation-info"></div>
                 </div>
@@ -665,7 +343,7 @@
                     <div class="hand-title">あなたの手牌</div>
                     <div class="hand" id="review-hand"></div>
                     <div class="controls">
-                        <button class="btn btn-primary" onclick="checkReviewAnswer()">判定</button>
+                        <button class="btn btn-primary" id="review-check-btn" onclick="checkReviewAnswer()">判定</button>
                         <button class="btn btn-warning" onclick="loadSimilarProblem()">類題を出す</button>
                     </div>
                 </div>
@@ -676,35 +354,80 @@
                 </div>
             </div>
         </div>
+
+        <!-- 成績パネル -->
+        <div id="stats-panel" hidden>
+            <div class="stats-cards" id="stats-cards"></div>
+            <div class="stats-section">
+                <h3>戦略別の正答率</h3>
+                <div id="stats-by-strategy"></div>
+            </div>
+            <div class="stats-section">
+                <h3>難易度別の正答率</h3>
+                <div id="stats-by-difficulty"></div>
+            </div>
+            <div class="stats-section">
+                <h3>直近14日の回答数</h3>
+                <div id="stats-daily"></div>
+            </div>
+            <div class="review-actions">
+                <button class="btn btn-danger btn-sm" onclick="resetStats()">成績をリセット</button>
+            </div>
+            <p class="stats-note">※ 成績は、この機能を追加した後の練習回答が対象です。得点と復習リストはリセットされません。</p>
+        </div>
     </div>
 
     <script>
         // ========================================
-        // グローバル変数
+        // 定数
         // ========================================
-        let currentHand = [];
-        let currentDiscards = [];
-        let selectedTile = null;
-        let safeTiles = [];
-        let dangerousTiles = [];
-        let currentSituation = null;
-        let hintUsed = false;
-        let currentScore = 0;
-        let totalScore = 0;
-        let scoreManager = null;
-        let currentMode = 'practice'; // 'practice' | 'review'
+        const SUITS = ['man', 'pin', 'sou'];
+        const SUIT_UNIT = { man: '萬', pin: '筒', sou: '索' };
+        const HONOR_NAMES = ['東', '南', '西', '北', '白', '発', '中'];
+        const PIN_PATTERNS = [
+            '◯', '◯<br>◯', '◯ ◯<br> ◯', '◯ ◯<br>◯ ◯', '◯ ◯<br> ◯<br>◯ ◯',
+            '◯ ◯<br>◯ ◯<br>◯ ◯', '◯ ◯<br>◯ ◯<br>◯ ◯<br> ◯', '◯ ◯<br>◯ ◯<br>◯ ◯<br>◯ ◯', '◯ ◯<br>◯ ◯<br>◯ ◯<br>◯ ◯<br> ◯'
+        ];
+        // 難易度: シャンテン数の範囲と、相手の捨て牌の枚数
+        const DIFFICULTY = {
+            beginner:     { label: '初級', shanten: [3, 8], discards: [10, 12] },
+            intermediate: { label: '中級', shanten: [0, 8], discards: [6, 9] },
+            advanced:     { label: '上級', shanten: [0, 3], discards: [4, 6] }
+        };
+        const STRATEGY_LABEL = { offensive: '攻撃重視', balanced: 'バランス', defensive: '安全重視' };
+        const STRATEGY_REASON = {
+            offensive: 'シャンテン数が少ないため、不要牌を素早く切って手を進めることを優先します。',
+            balanced: '攻めと守りのバランスを取り、現物や筋を優先します。',
+            defensive: '手が遠いため、現物・筋・端牌など安全な牌から切ります。'
+        };
+        const VERDICT_LABEL = { optimal: '最適', acceptable: '許容', dangerous: '危険' };
+        const VERDICT_RANK = { optimal: 0, acceptable: 1, dangerous: 2 };
+        const RISK_LABEL = ['安全', 'やや安全', '注意', '危険'];
+        const TILE_IMAGE_FILES = [
+            ...Array.from({ length: 9 }, (_, i) => ({ file: `p_ms${i + 1}_1.gif`, suit: 'man', number: i + 1 })),
+            ...Array.from({ length: 9 }, (_, i) => ({ file: `p_ps${i + 1}_1.gif`, suit: 'pin', number: i + 1 })),
+            ...Array.from({ length: 9 }, (_, i) => ({ file: `p_ss${i + 1}_1.gif`, suit: 'sou', number: i + 1 })),
+            { file: 'p_ji_e_1.gif', suit: 'honor', number: 1 },
+            { file: 'p_ji_s_1.gif', suit: 'honor', number: 2 },
+            { file: 'p_ji_w_1.gif', suit: 'honor', number: 3 },
+            { file: 'p_ji_n_1.gif', suit: 'honor', number: 4 },
+            { file: 'p_ji_h_1.gif', suit: 'honor', number: 5 },
+            { file: 'p_ji_c_1.gif', suit: 'honor', number: 6 },
+            { file: 'p_no_1.gif', suit: 'honor', number: 7 }
+        ];
+
+        // ========================================
+        // 状態
+        // ========================================
         let currentUser = null;
         let db = null;
+        let firebaseInitialized = false;
+        let cloudSynced = false;   // クラウドとの統合が終わるまで書き込みを止める
+        let sessionScore = 0;
+        const tileImages = { man: {}, pin: {}, sou: {}, honor: {} };
 
-        // 復習モード用
-        let reviewSelectedTile = null;
-        let reviewSafeTiles = [];
-        let reviewDangerousTiles = [];
-        let reviewCurrentSituation = null;
-        let reviewCurrentHand = [];
-        let reviewCurrentDiscards = [];
-        let currentReviewIndex = -1;
-        let isSimilarMode = false;
+        const practice = { problem: null, selectedIndex: null, judged: false, hintShown: false, difficulty: 'intermediate' };
+        const review = { source: null, problem: null, isSimilar: false, selectedIndex: null, judged: false, hintShown: false };
 
         // ========================================
         // Firebase 初期化
@@ -718,18 +441,42 @@
             appId: "YOUR_APP_ID"
         };
 
-        let firebaseInitialized = false;
         try {
             if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 firebaseInitialized = true;
-                console.log('Firebase初期化完了');
-            } else {
-                console.log('Firebase未設定 - ローカルストレージモードで動作します');
             }
         } catch (e) {
             console.log('Firebase初期化スキップ:', e.message);
+        }
+
+        // ========================================
+        // 保存ヘルパー（localStorage の読み書きを安全に）
+        // ========================================
+        const storage = {
+            get(key, fallback) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    return raw === null ? fallback : JSON.parse(raw);
+                } catch (e) {
+                    console.error('読み込みエラー:', key, e);
+                    return fallback;
+                }
+            },
+            set(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                } catch (e) {
+                    console.error('保存エラー:', key, e);
+                }
+            }
+        };
+
+        function localDateKey(date = new Date()) {
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${date.getFullYear()}-${m}-${d}`;
         }
 
         // ========================================
@@ -741,37 +488,28 @@
                 return;
             }
             const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider)
-                .then((result) => {
-                    console.log('ログイン成功:', result.user.displayName);
-                })
-                .catch((error) => {
-                    console.error('ログインエラー:', error);
-                    alert('ログインに失敗しました: ' + error.message);
-                });
+            firebase.auth().signInWithPopup(provider).catch((error) => {
+                console.error('ログインエラー:', error);
+                alert('ログインに失敗しました: ' + error.message);
+            });
         }
 
         function googleLogout() {
             if (!firebaseInitialized) return;
-            firebase.auth().signOut().then(() => {
-                console.log('ログアウト完了');
-            });
+            firebase.auth().signOut();
         }
 
         function updateAuthUI(user) {
             currentUser = user;
+            cloudSynced = false;
             const loggedOut = document.getElementById('auth-logged-out');
             const loggedIn = document.getElementById('auth-logged-in');
+            loggedOut.hidden = !!user;
+            loggedIn.hidden = !user;
             if (user) {
-                loggedOut.style.display = 'none';
-                loggedIn.style.display = 'block';
                 document.getElementById('user-avatar').src = user.photoURL || '';
                 document.getElementById('user-name').textContent = user.displayName || user.email;
-                // Firestoreからデータを読み込み
                 loadUserDataFromFirestore();
-            } else {
-                loggedOut.style.display = 'block';
-                loggedIn.style.display = 'none';
             }
         }
 
@@ -780,37 +518,56 @@
         }
 
         // ========================================
-        // Firestore データ同期
+        // Firestore データ同期（端末とクラウドを統合し、消えないようにする）
         // ========================================
+        function unionBy(a, b, keyFn) {
+            const map = new Map();
+            [...a, ...b].forEach(item => {
+                const key = keyFn(item);
+                if (!map.has(key)) map.set(key, item);
+            });
+            return [...map.values()].sort((x, y) => keyFn(x) - keyFn(y));
+        }
+
         async function loadUserDataFromFirestore() {
             if (!firebaseInitialized || !currentUser) return;
             try {
-                const doc = await db.collection('users').doc(currentUser.uid).get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    if (data.totalScore !== undefined) {
-                        totalScore = data.totalScore;
-                        localStorage.setItem('mahjong_total_score', totalScore.toString());
-                    }
-                    if (data.incorrectProblems) {
-                        localStorage.setItem('mahjong_incorrect_problems', JSON.stringify(data.incorrectProblems));
-                    }
-                    if (scoreManager) scoreManager.loadScores();
-                    updateReviewBadge();
-                    console.log('Firestoreからデータ読み込み完了');
-                }
+                const snap = await db.collection('users').doc(currentUser.uid).get();
+                const cloud = snap.exists ? snap.data() : {};
+
+                // 合計得点は大きい方を採用（端末側の得点が減らないように）
+                storage.set('mahjong_total_score', Math.max(getTotalScore(), Number(cloud.totalScore) || 0));
+
+                const localDaily = storage.get('mahjong_daily_scores', {});
+                const cloudDaily = cloud.dailyScores || {};
+                const mergedDaily = {};
+                new Set([...Object.keys(localDaily), ...Object.keys(cloudDaily)]).forEach(k => {
+                    mergedDaily[k] = Math.max(localDaily[k] || 0, cloudDaily[k] || 0);
+                });
+                storage.set('mahjong_daily_scores', mergedDaily);
+
+                storage.set('mahjong_incorrect_problems',
+                    unionBy(getIncorrectProblems(), cloud.incorrectProblems || [], p => p.id).slice(-50));
+                storage.set('mahjong_game_records',
+                    unionBy(storage.get('mahjong_game_records', []), cloud.gameRecords || [], r => r.timestamp).slice(-1000));
+
+                cloudSynced = true;
+                await saveUserDataToFirestore();
+                updateScoreDisplay();
+                updateReviewBadge();
             } catch (e) {
                 console.error('Firestore読み込みエラー:', e);
             }
         }
 
         async function saveUserDataToFirestore() {
-            if (!firebaseInitialized || !currentUser) return;
+            if (!firebaseInitialized || !currentUser || !cloudSynced) return;
             try {
-                const incorrectProblems = JSON.parse(localStorage.getItem('mahjong_incorrect_problems') || '[]');
                 await db.collection('users').doc(currentUser.uid).set({
-                    totalScore: parseInt(localStorage.getItem('mahjong_total_score') || '0'),
-                    incorrectProblems: incorrectProblems,
+                    totalScore: getTotalScore(),
+                    dailyScores: storage.get('mahjong_daily_scores', {}),
+                    incorrectProblems: getIncorrectProblems(),
+                    gameRecords: storage.get('mahjong_game_records', []),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
             } catch (e) {
@@ -819,992 +576,889 @@
         }
 
         // ========================================
-        // 間違えた問題の保存・管理
+        // スコア・記録
         // ========================================
-        function saveIncorrectProblem(hand, discards, situation, selectedTile, safeTiles, dangerousTiles) {
-            try {
-                const problems = JSON.parse(localStorage.getItem('mahjong_incorrect_problems') || '[]');
-                problems.push({
-                    id: Date.now(),
-                    timestamp: new Date().toISOString(),
-                    hand: hand,
-                    discards: discards,
-                    situation: {
-                        shanten: situation.shanten,
-                        strategy: situation.strategy,
-                        description: situation.description
-                    },
-                    selectedTile: selectedTile,
-                    safeTiles: safeTiles,
-                    dangerousTiles: dangerousTiles,
-                    reviewed: false,
-                    reviewCount: 0
-                });
-                // 最大50問保持
-                if (problems.length > 50) {
-                    problems.splice(0, problems.length - 50);
-                }
-                localStorage.setItem('mahjong_incorrect_problems', JSON.stringify(problems));
-                updateReviewBadge();
-                saveUserDataToFirestore();
-            } catch (e) {
-                console.error('間違えた問題の保存エラー:', e);
-            }
+        function getTotalScore() {
+            return Number(storage.get('mahjong_total_score', 0)) || 0;
         }
 
+        function updateScoreDisplay() {
+            document.getElementById('current-score').textContent = sessionScore;
+            document.getElementById('total-score').textContent = getTotalScore();
+        }
+
+        function addGameRecord(points, info) {
+            storage.set('mahjong_total_score', getTotalScore() + points);
+
+            const key = localDateKey();
+            const daily = storage.get('mahjong_daily_scores', {});
+            daily[key] = (daily[key] || 0) + points;
+            storage.set('mahjong_daily_scores', daily);
+
+            const records = storage.get('mahjong_game_records', []);
+            records.push({ timestamp: Date.now(), score: points, ...info });
+            storage.set('mahjong_game_records', records.slice(-1000));
+
+            updateScoreDisplay();
+            saveUserDataToFirestore();
+        }
+
+        // ========================================
+        // 間違えた問題の保存・管理
+        // ========================================
         function getIncorrectProblems() {
-            try {
-                return JSON.parse(localStorage.getItem('mahjong_incorrect_problems') || '[]');
-            } catch (e) {
-                return [];
-            }
+            const list = storage.get('mahjong_incorrect_problems', []);
+            return Array.isArray(list) ? list : [];
+        }
+
+        function setIncorrectProblems(list) {
+            storage.set('mahjong_incorrect_problems', list);
+            updateReviewBadge();
+            saveUserDataToFirestore();
+        }
+
+        function saveIncorrectProblem(problem, verdict) {
+            const list = getIncorrectProblems();
+            list.push({
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                hand: problem.hand,
+                discards: problem.discards,
+                situation: {
+                    shanten: problem.situation.shanten,
+                    strategy: problem.situation.strategy,
+                    description: problem.situation.description
+                },
+                difficulty: problem.difficulty,
+                verdict: verdict,
+                reviewed: false,
+                reviewCount: 0
+            });
+            setIncorrectProblems(list.slice(-50));
         }
 
         function removeIncorrectProblem(id) {
-            try {
-                let problems = getIncorrectProblems();
-                problems = problems.filter(p => p.id !== id);
-                localStorage.setItem('mahjong_incorrect_problems', JSON.stringify(problems));
-                updateReviewBadge();
-                saveUserDataToFirestore();
-            } catch (e) {
-                console.error('問題削除エラー:', e);
-            }
+            setIncorrectProblems(getIncorrectProblems().filter(p => p.id !== id));
         }
 
         function markProblemReviewed(id) {
-            try {
-                const problems = getIncorrectProblems();
-                const prob = problems.find(p => p.id === id);
-                if (prob) {
-                    prob.reviewed = true;
-                    prob.reviewCount = (prob.reviewCount || 0) + 1;
-                    localStorage.setItem('mahjong_incorrect_problems', JSON.stringify(problems));
-                    saveUserDataToFirestore();
-                }
-            } catch (e) {
-                console.error('復習マークエラー:', e);
-            }
+            const list = getIncorrectProblems();
+            const p = list.find(x => x.id === id);
+            if (!p) return;
+            p.reviewed = true;
+            p.reviewCount = (p.reviewCount || 0) + 1;
+            setIncorrectProblems(list);
         }
 
         function updateReviewBadge() {
+            const count = getIncorrectProblems().length;
             const badge = document.getElementById('review-badge');
-            const problems = getIncorrectProblems();
-            if (problems.length > 0) {
-                badge.style.display = 'inline-block';
-                badge.textContent = problems.length;
-            } else {
-                badge.style.display = 'none';
-            }
+            badge.hidden = count === 0;
+            badge.textContent = count;
         }
 
         function clearAllReviews() {
             if (!confirm('全ての復習問題を削除しますか？')) return;
-            localStorage.setItem('mahjong_incorrect_problems', '[]');
-            updateReviewBadge();
+            setIncorrectProblems([]);
             renderReviewList();
-            saveUserDataToFirestore();
+        }
+
+        // ========================================
+        // 牌ユーティリティ
+        // ========================================
+        function sameTile(a, b) {
+            return a.number === b.number && a.suit === b.suit;
+        }
+
+        function tileKey(t) {
+            return t.suit + t.number;
+        }
+
+        function tileName(t) {
+            return t.suit === 'honor' ? HONOR_NAMES[t.number - 1] : t.number + SUIT_UNIT[t.suit];
+        }
+
+        function tileIndex(t) {
+            return t.suit === 'honor' ? 27 + t.number - 1 : SUITS.indexOf(t.suit) * 9 + t.number - 1;
+        }
+
+        function indexToTile(idx) {
+            return idx < 27
+                ? { suit: SUITS[Math.floor(idx / 9)], number: (idx % 9) + 1 }
+                : { suit: 'honor', number: idx - 27 + 1 };
+        }
+
+        function countTiles(tiles) {
+            const c = new Array(34).fill(0);
+            tiles.forEach(t => c[tileIndex(t)]++);
+            return c;
+        }
+
+        function copiesOf(tile, ...lists) {
+            let n = 0;
+            lists.forEach(list => list.forEach(t => { if (sameTile(t, tile)) n++; }));
+            return n;
+        }
+
+        function randInt(min, max) {
+            return min + Math.floor(Math.random() * (max - min + 1));
+        }
+
+        function sortHand(hand) {
+            const order = { man: 0, pin: 1, sou: 2, honor: 3 };
+            return hand.sort((a, b) => order[a.suit] !== order[b.suit] ? order[a.suit] - order[b.suit] : a.number - b.number);
+        }
+
+        // 同じ牌は最大4枚。山（136枚）から引くことで枚数制限を守る
+        function buildDeck() {
+            const deck = [];
+            SUITS.forEach(suit => {
+                for (let n = 1; n <= 9; n++) for (let k = 0; k < 4; k++) deck.push({ number: n, suit });
+            });
+            for (let n = 1; n <= 7; n++) for (let k = 0; k < 4; k++) deck.push({ number: n, suit: 'honor' });
+            return deck;
+        }
+
+        function drawTiles(deck, n) {
+            const out = [];
+            for (let i = 0; i < n && deck.length > 0; i++) {
+                const k = Math.floor(Math.random() * deck.length);
+                out.push(deck.splice(k, 1)[0]);
+            }
+            return out;
+        }
+
+        // ========================================
+        // シャンテン数（面子・搭子・雀頭の最小分解から算出）
+        // ========================================
+        function searchShanten(c, i, m, t, p) {
+            while (i < 34 && c[i] === 0) i++;
+            if (i >= 34) return 8 - 2 * m - Math.min(t, 4 - m) - p;
+
+            const suited = i < 27;
+            const n = i % 9;
+            const recurse = (nm, nt, np) => searchShanten(c, i, nm, nt, np);
+            let best = Infinity;
+
+            if (c[i] >= 3 && m < 4) {                       // 刻子
+                c[i] -= 3; best = Math.min(best, recurse(m + 1, t, p)); c[i] += 3;
+            }
+            if (suited && n <= 6 && m < 4 && c[i + 1] > 0 && c[i + 2] > 0) {   // 順子
+                c[i]--; c[i + 1]--; c[i + 2]--;
+                best = Math.min(best, recurse(m + 1, t, p));
+                c[i]++; c[i + 1]++; c[i + 2]++;
+            }
+            if (c[i] >= 2 && p === 0) {                     // 雀頭
+                c[i] -= 2; best = Math.min(best, recurse(m, t, 1)); c[i] += 2;
+            }
+            if (m + t < 4) {
+                if (c[i] >= 2) {                            // 対子（搭子）
+                    c[i] -= 2; best = Math.min(best, recurse(m, t + 1, p)); c[i] += 2;
+                }
+                if (suited && n <= 7 && c[i + 1] > 0) {     // 両面・辺張
+                    c[i]--; c[i + 1]--; best = Math.min(best, recurse(m, t + 1, p)); c[i]++; c[i + 1]++;
+                }
+                if (suited && n <= 6 && c[i + 2] > 0) {     // 嵌張
+                    c[i]--; c[i + 2]--; best = Math.min(best, recurse(m, t + 1, p)); c[i]++; c[i + 2]++;
+                }
+            }
+            // 面子・搭子に使わない牌として捨てる
+            const saved = c[i];
+            c[i] = 0;
+            best = Math.min(best, searchShanten(c, i + 1, m, t, p));
+            c[i] = saved;
+            return best;
+        }
+
+        function calcShanten(tiles) {
+            return searchShanten(countTiles(tiles), 0, 0, 0, 0);
+        }
+
+        // シャンテン数を下げる牌（テンパイ時は待ち牌）
+        function findUsefulTiles(hand, base) {
+            const counts = countTiles(hand);
+            const result = [];
+            for (let idx = 0; idx < 34; idx++) {
+                if (counts[idx] >= 4) continue;
+                const tile = indexToTile(idx);
+                if (calcShanten([...hand, tile]) < base) result.push(tile);
+            }
+            return result;
+        }
+
+        function describeSituation(hand, shanten = calcShanten(hand)) {
+            const strategy = shanten <= 1 ? 'offensive' : shanten <= 3 ? 'balanced' : 'defensive';
+            const description = shanten === 0
+                ? 'テンパイです。待ち牌を引くことを優先して、攻めましょう。'
+                : shanten === 1
+                ? 'イーシャンテンです。テンパイを優先して、攻撃的に打ちましょう。'
+                : shanten <= 3
+                ? `${shanten}シャンテンです。攻めと守りのバランスを考えて打牌しましょう。`
+                : `${shanten}シャンテンです。手が遠いので、安全重視で打ちましょう。`;
+            return {
+                shanten,
+                strategy,
+                description,
+                tenpai: shanten === 0,
+                waitTiles: findUsefulTiles(hand, shanten)
+            };
+        }
+
+        // ========================================
+        // 安全度の判定（ルールベース・決定的）
+        // ========================================
+        // level: 0=安全(現物) 1=比較的安全(筋・端牌) 2=注意 3=危険
+        function tileRisk(tile, discards) {
+            if (discards.some(d => sameTile(d, tile))) {
+                return { level: 0, label: '現物', reason: '他家が既に切っている牌（現物）なので安全です' };
+            }
+            if (tile.suit === 'honor') {
+                return { level: 2, label: '字牌', reason: '未見の字牌です。役牌の場合は特に注意が必要です' };
+            }
+            const n = tile.number;
+            const suji = discards.find(d => d.suit === tile.suit && Math.abs(d.number - n) === 3);
+            if (suji) {
+                return { level: 1, label: '筋', reason: `${tileName(suji)}を切っているため、筋で通りやすい牌です` };
+            }
+            if (n === 1 || n === 9) {
+                return { level: 1, label: '端牌', reason: '1・9は比較的安全な端牌です' };
+            }
+            if (n === 2 || n === 8) {
+                return { level: 2, label: '2・8', reason: '2・8は筋がないと注意が必要です' };
+            }
+            return { level: 3, label: '中張', reason: '3〜7は筋がないと危険度が高い牌です' };
+        }
+
+        // 面子・搭子に使えるか（対子、または同色の隣接牌（±2以内）がある）
+        function isNeeded(tile, hand) {
+            const counts = countTiles(hand);
+            if (counts[tileIndex(tile)] >= 2) return true;
+            if (tile.suit === 'honor') return false;
+            for (let d = -2; d <= 2; d++) {
+                if (d === 0) continue;
+                const nn = tile.number + d;
+                if (nn < 1 || nn > 9) continue;
+                if (counts[tileIndex({ suit: tile.suit, number: nn })] > 0) return true;
+            }
+            return false;
+        }
+
+        function isAllowed(level, needed, strategy) {
+            if (strategy === 'defensive') return level <= 1;
+            if (strategy === 'balanced') return level <= 1 || (level === 2 && !needed);
+            return level <= 2 || (!needed && level <= 3);   // 攻撃: 不要牌なら多少のリスクを許容
+        }
+
+        function costOf(level, needed, strategy) {
+            const weight = strategy === 'defensive' ? 1 : strategy === 'balanced' ? 5 : 100;
+            return level * 10 + (needed ? weight : 0);
+        }
+
+        function analyzeSafety(hand, discards, strategy) {
+            const seen = new Set();
+            const rows = [];
+            hand.forEach(tile => {
+                const key = tileKey(tile);
+                if (seen.has(key)) return;
+                seen.add(key);
+                const risk = tileRisk(tile, discards);
+                const needed = isNeeded(tile, hand);
+                rows.push({
+                    tile,
+                    key,
+                    level: risk.level,
+                    riskLabel: risk.label,
+                    reason: risk.reason,
+                    needed,
+                    allowed: isAllowed(risk.level, needed, strategy),
+                    cost: costOf(risk.level, needed, strategy)
+                });
+            });
+
+            const allowedCosts = rows.filter(r => r.allowed).map(r => r.cost);
+            const minCost = allowedCosts.length ? Math.min(...allowedCosts) : Infinity;
+            rows.forEach(r => {
+                r.verdict = !r.allowed ? 'dangerous' : r.cost === minCost ? 'optimal' : 'acceptable';
+            });
+
+            return {
+                rows,
+                optimal: rows.filter(r => r.verdict === 'optimal').map(r => r.tile),
+                recommended: rows.filter(r => r.verdict !== 'dangerous').sort((a, b) => a.cost - b.cost).map(r => r.tile),
+                dangerous: rows.filter(r => r.verdict === 'dangerous').map(r => r.tile)
+            };
+        }
+
+        function judgeTile(problem, index) {
+            const key = tileKey(problem.hand[index]);
+            const row = problem.analysis.rows.find(r => r.key === key);
+            return row ? row.verdict : 'dangerous';
+        }
+
+        // ========================================
+        // 問題生成
+        // ========================================
+        function buildProblem(difficulty, wantStrategy = null) {
+            const diff = DIFFICULTY[difficulty] ? difficulty : 'intermediate';
+            const cfg = DIFFICULTY[diff];
+
+            for (let attempt = 0; attempt < 600; attempt++) {
+                const relaxed = attempt >= 300;   // 条件が厳しすぎる場合は条件を緩める
+                const deck = buildDeck();
+                const hand = sortHand(drawTiles(deck, 13));
+                const shanten = calcShanten(hand);
+                if (!relaxed && (shanten < cfg.shanten[0] || shanten > cfg.shanten[1])) continue;
+
+                const situation = describeSituation(hand, shanten);
+                if (!relaxed && wantStrategy && situation.strategy !== wantStrategy) continue;
+
+                const discards = drawTiles(deck, randInt(cfg.discards[0], cfg.discards[1]));
+                const analysis = analyzeSafety(hand, discards, situation.strategy);
+                if (analysis.optimal.length > 0) {
+                    return { hand, discards, situation, analysis, difficulty: diff };
+                }
+            }
+
+            // 保険: 手牌の1枚を現物として捨て牌に加え、必ず「最適」が存在するようにする
+            const deck = buildDeck();
+            const hand = sortHand(drawTiles(deck, 13));
+            const discards = drawTiles(deck, cfg.discards[0]);
+            const extra = hand.find(t => copiesOf(t, hand, discards) < 4);
+            if (extra) discards.push({ number: extra.number, suit: extra.suit });
+            const situation = describeSituation(hand);
+            return { hand, discards, situation, analysis: analyzeSafety(hand, discards, situation.strategy), difficulty: diff };
+        }
+
+        function problemFromRecord(rec) {
+            const situation = describeSituation(rec.hand);
+            return {
+                hand: rec.hand,
+                discards: rec.discards,
+                situation,
+                analysis: analyzeSafety(rec.hand, rec.discards, situation.strategy),
+                difficulty: rec.difficulty || 'intermediate'
+            };
+        }
+
+        // ========================================
+        // 得点
+        // ========================================
+        function calculateScore(verdict, hintUsed, situation) {
+            let full = { offensive: 15, balanced: 12, defensive: 10 }[situation.strategy] || 12;
+            if (situation.shanten <= 1) full += 5;
+            else if (situation.shanten >= 5) full += 3;
+
+            let points;
+            if (verdict === 'optimal') points = full;
+            else if (verdict === 'acceptable') points = Math.round(full / 2);
+            else points = -3;
+            if (hintUsed) points -= 5;
+            return Math.max(points, -5);
+        }
+
+        // ========================================
+        // 表示ヘルパー
+        // ========================================
+        function getStrategyText(strategy) {
+            return STRATEGY_LABEL[strategy] || 'バランス';
+        }
+
+        function createTilePattern(number, suit) {
+            if (suit === 'honor') return HONOR_NAMES[number - 1];
+            if (suit === 'man') return `${number}萬`;
+            if (suit === 'sou') return `${number}索`;
+            return PIN_PATTERNS[number - 1];
+        }
+
+        function createTile(number, suit, { small = false, clickable = false, selected = false } = {}) {
+            const tile = document.createElement('div');
+            tile.className = ['tile', suit, small ? 'small-tile' : '', clickable ? '' : 'not-selectable', selected ? 'selected' : '']
+                .filter(Boolean).join(' ');
+            const img = tileImages[suit] && tileImages[suit][number];
+            if (img) {
+                tile.innerHTML = `<img src="${img}" alt="${tileName({ number, suit })}" class="tile-image">`;
+            } else {
+                const cls = { man: 'man-pattern', pin: 'pin-pattern', sou: 'sou-pattern' }[suit] || '';
+                tile.innerHTML = `<span class="tile-pattern ${cls}">${createTilePattern(number, suit)}</span>`;
+            }
+            tile.dataset.number = number;
+            tile.dataset.suit = suit;
+            return tile;
+        }
+
+        function tilesHtml(tiles) {
+            return tiles.map(t => createTile(t.number, t.suit, { small: true }).outerHTML).join('');
+        }
+
+        // 牌の列を描画。clickable のとき onSelect(index, node) を呼ぶ
+        function fillTileRow(container, tiles, { clickable = false, selectedIndex = null, onSelect = null } = {}) {
+            container.innerHTML = '';
+            tiles.forEach((t, index) => {
+                const node = createTile(t.number, t.suit, { clickable, selected: index === selectedIndex });
+                if (clickable && onSelect) {
+                    const pick = () => onSelect(index, node);
+                    node.tabIndex = 0;
+                    node.setAttribute('role', 'button');
+                    node.setAttribute('aria-label', tileName(t));
+                    node.addEventListener('click', pick);
+                    node.addEventListener('keydown', e => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
+                    });
+                }
+                container.appendChild(node);
+            });
+        }
+
+        function markSelectedNode(container, node) {
+            container.querySelectorAll('.tile.selected').forEach(n => n.classList.remove('selected'));
+            node.classList.add('selected');
+        }
+
+        function applyStrategyClass(section, strategy) {
+            section.className = 'situation-section' +
+                (strategy === 'offensive' ? ' situation-offensive' : strategy === 'defensive' ? ' situation-defensive' : '');
+        }
+
+        function situationHtml(s) {
+            const waitLabel = s.tenpai ? '待ち牌' : '有効牌（シャンテンを下げる候補）';
+            const waits = s.waitTiles.length
+                ? `<div class="hint-label">${waitLabel}：${s.waitTiles.length}種</div><div class="wait-tiles">${tilesHtml(s.waitTiles)}</div>`
+                : '';
+            return `
+                <div class="shanten-info">${s.shanten}シャンテン</div>
+                <div class="strategy-info">戦略: ${getStrategyText(s.strategy)}</div>
+                <div>${s.description}</div>
+                ${waits}`;
+        }
+
+        function explanationHtml(problem) {
+            const rows = problem.analysis.rows
+                .slice()
+                .sort((a, b) => VERDICT_RANK[a.verdict] - VERDICT_RANK[b.verdict] || a.cost - b.cost);
+            const body = rows.map(r => `
+                <tr>
+                    <td>${createTile(r.tile.number, r.tile.suit, { small: true }).outerHTML}</td>
+                    <td><span class="verdict-badge ${r.verdict}">${VERDICT_LABEL[r.verdict]}</span></td>
+                    <td class="col-risk">${RISK_LABEL[r.level]}</td>
+                    <td>${r.reason}<br><small>${r.needed ? '面子・搭子に使える牌' : '孤立している牌（不要牌候補）'}</small></td>
+                </tr>`).join('');
+            return `
+                <div class="table-wrap">
+                    <table class="explain-table">
+                        <thead><tr><th>牌</th><th>判定</th><th class="col-risk">危険度</th><th>理由</th></tr></thead>
+                        <tbody>${body}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        // 判定結果を表示（prefix: 'feedback' または 'review-feedback'）
+        function showJudgement(prefix, { problem, index, verdict, points = null, hintUsed = false }) {
+            const panel = document.getElementById(prefix);
+            const tile = problem.hand[index];
+            const row = problem.analysis.rows.find(r => r.key === tileKey(tile));
+            const s = problem.situation;
+
+            const titleText = { optimal: '最適な選択です！', acceptable: '許容できる選択です', dangerous: '危険な選択です' }[verdict];
+            const cls = { optimal: 'correct', acceptable: 'neutral', dangerous: 'incorrect' }[verdict];
+            const pointsText = points === null ? '' : ` ${points > 0 ? '+' : ''}${points}pt`;
+
+            document.getElementById(prefix + '-title').textContent = titleText + pointsText;
+            document.getElementById(prefix + '-content').innerHTML = `
+                <div class="judge-line">あなたの選択：<strong>${tileName(tile)}</strong>（${row.riskLabel}・判定：${VERDICT_LABEL[verdict]}）</div>
+                <div class="alternatives">
+                    <div class="alternatives-title">推奨される牌（${getStrategyText(s.strategy)}）:</div>
+                    <div class="safe-tiles">${tilesHtml(problem.analysis.recommended)}</div>
+                    <div class="alternatives-title">危険な牌:</div>
+                    <div class="dangerous-tiles">${tilesHtml(problem.analysis.dangerous)}</div>
+                </div>
+                <div class="explanation">
+                    <strong>状況分析:</strong><br>
+                    ・${s.shanten}シャンテン（${getStrategyText(s.strategy)}）<br>
+                    ・${STRATEGY_REASON[s.strategy]}<br>
+                    ・安全度は「現物 → 筋・端牌 → 2・8 → 中張・字牌」の順に判定しています<br>
+                    ${hintUsed ? '・ヒントを使ったため -5pt' : '・ヒント未使用'}
+                </div>
+                <div class="alternatives-title" style="margin-top:15px;">各牌の解説</div>
+                ${explanationHtml(problem)}`;
+            panel.className = `feedback show ${cls}`;
+        }
+
+        // ========================================
+        // 練習モード
+        // ========================================
+        function setDifficulty(d) {
+            if (!DIFFICULTY[d]) return;
+            practice.difficulty = d;
+            storage.set('mahjong_difficulty', d);
+            updateDifficultyButtons();
+            newPracticeProblem();
+        }
+
+        function updateDifficultyButtons() {
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.diff === practice.difficulty);
+            });
+        }
+
+        function newPracticeProblem() {
+            practice.problem = buildProblem(practice.difficulty);
+            practice.selectedIndex = null;
+            practice.judged = false;
+            practice.hintShown = false;
+            const fb = document.getElementById('feedback');
+            fb.className = 'feedback';
+            renderPractice();
+        }
+
+        function renderPractice() {
+            const p = practice.problem;
+            if (!p) return;
+
+            fillTileRow(document.getElementById('discards'), p.discards);
+            const handEl = document.getElementById('hand');
+            fillTileRow(handEl, p.hand, {
+                clickable: !practice.judged,
+                selectedIndex: practice.selectedIndex,
+                onSelect: (index, node) => {
+                    practice.selectedIndex = index;
+                    markSelectedNode(handEl, node);
+                }
+            });
+
+            const section = document.getElementById('situation-section');
+            section.hidden = !practice.hintShown;
+            applyStrategyClass(section, p.situation.strategy);
+            document.getElementById('situation-info').innerHTML = situationHtml(p.situation);
+
+            const hintBtn = document.getElementById('hint-btn');
+            hintBtn.disabled = practice.hintShown || practice.judged;
+            hintBtn.textContent = practice.hintShown ? 'ヒント表示済み (-5pt)' : 'ヒントを見る (-5pt)';
+
+            document.getElementById('check-btn').disabled = practice.judged;
+            document.getElementById('new-problem-btn').hidden = !practice.judged;
+        }
+
+        function showHint() {
+            if (practice.judged || practice.hintShown) return;
+            practice.hintShown = true;
+            renderPractice();
+        }
+
+        function checkPracticeAnswer() {
+            const p = practice.problem;
+            if (!p || practice.judged) return;
+            if (practice.selectedIndex === null) {
+                alert('牌を選択してください');
+                return;
+            }
+
+            practice.judged = true;
+            const verdict = judgeTile(p, practice.selectedIndex);
+            const points = calculateScore(verdict, practice.hintShown, p.situation);
+            sessionScore += points;
+
+            addGameRecord(points, {
+                mode: 'practice',
+                verdict,
+                hintUsed: practice.hintShown,
+                strategy: p.situation.strategy,
+                shanten: p.situation.shanten,
+                difficulty: p.difficulty
+            });
+            if (verdict !== 'optimal') saveIncorrectProblem(p, verdict);
+
+            renderPractice();
+            showJudgement('feedback', {
+                problem: p,
+                index: practice.selectedIndex,
+                verdict,
+                points,
+                hintUsed: practice.hintShown
+            });
         }
 
         // ========================================
         // モード切替
         // ========================================
         function switchMode(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + mode).classList.add('active');
+            document.querySelectorAll('.mode-tab').forEach(t => {
+                const on = t.dataset.mode === mode;
+                t.classList.toggle('active', on);
+                t.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            document.getElementById('practice-panel').hidden = mode !== 'practice';
+            document.getElementById('review-panel').hidden = mode !== 'review';
+            document.getElementById('stats-panel').hidden = mode !== 'stats';
 
-            if (mode === 'practice') {
-                document.getElementById('practice-panel').style.display = 'flex';
-                document.getElementById('review-panel').classList.remove('active');
-            } else {
-                document.getElementById('practice-panel').style.display = 'none';
-                document.getElementById('review-panel').classList.add('active');
-                renderReviewList();
-            }
+            if (mode === 'review') renderReviewList();
+            if (mode === 'stats') renderStats();
         }
 
         // ========================================
-        // 復習一覧表示
+        // 復習モード
         // ========================================
-        function renderReviewList() {
-            const list = document.getElementById('review-list');
-            const gameArea = document.getElementById('review-game-area');
-            gameArea.style.display = 'none';
-            list.style.display = 'flex';
+        function showReviewArea(on) {
+            document.getElementById('review-list-view').hidden = on;
+            document.getElementById('review-game-area').hidden = !on;
+        }
 
+        function renderReviewList() {
+            showReviewArea(false);
+            const list = document.getElementById('review-list');
             const problems = getIncorrectProblems();
             if (problems.length === 0) {
                 list.innerHTML = '<div class="review-empty">間違えた問題はありません。<br>練習モードで問題を解きましょう！</div>';
                 return;
             }
 
-            list.innerHTML = problems.map((p, idx) => {
+            list.innerHTML = problems.map(p => {
                 const date = new Date(p.timestamp);
-                const dateStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
-                const strategyLabel = p.situation.strategy === 'offensive' ? '攻撃' :
-                                      p.situation.strategy === 'defensive' ? '守備' : 'バランス';
-                const reviewedMark = p.reviewed ? ' (復習済み' + (p.reviewCount > 1 ? ' x' + p.reviewCount : '') + ')' : '';
+                const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                const strategy = p.situation.strategy;
+                const reviewedMark = p.reviewed ? `（復習済み${p.reviewCount > 1 ? ' ×' + p.reviewCount : ''}）` : '';
+                const diffLabel = DIFFICULTY[p.difficulty] ? DIFFICULTY[p.difficulty].label : '中級';
                 return `
-                    <div class="review-card" onclick="startReview(${idx})">
+                    <div class="review-card" onclick="startReview(${p.id})">
                         <div class="review-card-header">
-                            <span class="review-card-date">${dateStr}${reviewedMark}</span>
-                            <span class="review-card-strategy ${p.situation.strategy}">${strategyLabel} / ${p.situation.shanten}シャンテン</span>
+                            <span class="review-card-date">${dateStr} ${reviewedMark}</span>
+                            <span class="review-card-strategy ${strategy}">${getStrategyText(strategy)} / ${p.situation.shanten}シャンテン</span>
                         </div>
-                        <div class="review-card-info">
-                            手牌 ${p.hand.length}枚 / 捨て牌 ${p.discards.length}枚
+                        <div class="review-card-info">難易度: ${diffLabel} ／ 手牌 ${p.hand.length}枚 ／ 捨て牌 ${p.discards.length}枚</div>
+                        <div class="review-card-buttons">
+                            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); startReview(${p.id})">復習する</button>
+                            <button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); startSimilar(${p.id})">類題を出す</button>
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteProblem(${p.id})">削除</button>
                         </div>
-                        <div style="display:flex;gap:10px;margin-top:8px;">
-                            <button class="btn btn-primary" style="padding:6px 14px;font-size:13px;" onclick="event.stopPropagation();startReview(${idx})">復習する</button>
-                            <button class="btn btn-warning" style="padding:6px 14px;font-size:13px;" onclick="event.stopPropagation();startSimilar(${idx})">類題を出す</button>
-                            <button class="btn btn-danger" style="padding:6px 14px;font-size:13px;" onclick="event.stopPropagation();deleteProblem(${idx})">削除</button>
-                        </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
-        function deleteProblem(idx) {
-            const problems = getIncorrectProblems();
-            if (idx >= 0 && idx < problems.length) {
-                removeIncorrectProblem(problems[idx].id);
-                renderReviewList();
-            }
+        function deleteProblem(id) {
+            removeIncorrectProblem(id);
+            renderReviewList();
         }
 
-        // ========================================
-        // 復習問題を開始
-        // ========================================
-        function startReview(idx) {
-            const problems = getIncorrectProblems();
-            if (idx < 0 || idx >= problems.length) return;
+        function openReview(source, isSimilar) {
+            review.source = source;
+            review.isSimilar = isSimilar;
+            review.problem = isSimilar
+                ? buildProblem(source.difficulty, source.situation.strategy)
+                : problemFromRecord(source);
+            review.selectedIndex = null;
+            review.judged = false;
+            review.hintShown = false;
 
-            currentReviewIndex = idx;
-            isSimilarMode = false;
-            const p = problems[idx];
-
-            reviewCurrentHand = p.hand;
-            reviewCurrentDiscards = p.discards;
-            reviewCurrentSituation = p.situation;
-            reviewSafeTiles = p.safeTiles;
-            reviewDangerousTiles = p.dangerousTiles;
-            reviewSelectedTile = null;
-
-            document.getElementById('review-mode-title').textContent = '復習問題';
-            showReviewProblem();
-            markProblemReviewed(p.id);
+            document.getElementById('review-mode-title').innerHTML =
+                isSimilar ? '類題 <span class="similar-badge">類題</span>' : '復習問題';
+            document.getElementById('review-feedback').className = 'feedback';
+            showReviewArea(true);
+            renderReviewProblem();
         }
 
-        // ========================================
-        // 類題を生成して開始
-        // ========================================
-        function startSimilar(idx) {
-            const problems = getIncorrectProblems();
-            if (idx < 0 || idx >= problems.length) return;
+        function startReview(id) {
+            const rec = getIncorrectProblems().find(p => p.id === id);
+            if (!rec) return;
+            markProblemReviewed(id);
+            openReview(rec, false);
+        }
 
-            currentReviewIndex = idx;
-            isSimilarMode = true;
-            const original = problems[idx];
-
-            // 元の問題と似た条件で新しい問題を生成
-            const similar = generateSimilarProblem(original);
-
-            reviewCurrentHand = similar.hand;
-            reviewCurrentDiscards = similar.discards;
-            reviewCurrentSituation = similar.situation;
-            reviewSafeTiles = similar.safeTiles;
-            reviewDangerousTiles = similar.dangerousTiles;
-            reviewSelectedTile = null;
-
-            document.getElementById('review-mode-title').innerHTML = '類題 <span class="similar-badge">類題</span>';
-            showReviewProblem();
+        function startSimilar(id) {
+            const rec = getIncorrectProblems().find(p => p.id === id);
+            if (!rec) return;
+            openReview(rec, true);
         }
 
         function loadSimilarProblem() {
-            if (currentReviewIndex < 0) return;
-            startSimilar(currentReviewIndex);
-        }
-
-        // ========================================
-        // 類題生成ロジック
-        // ========================================
-        function generateSimilarProblem(original) {
-            const targetShanten = original.situation.shanten;
-            const targetStrategy = original.situation.strategy;
-
-            // 元の手牌の種類分布を取得
-            const origGroups = {};
-            original.hand.forEach(t => {
-                origGroups[t.suit] = (origGroups[t.suit] || 0) + 1;
-            });
-
-            let bestHand = null;
-            let bestDiff = Infinity;
-
-            // 複数回試行して、元の問題に近いシャンテン数の手牌を選ぶ
-            for (let attempt = 0; attempt < 50; attempt++) {
-                const hand = generateSimilarHand(origGroups, original.hand.length);
-                const situation = analyzeSituation(hand);
-                const shantenDiff = Math.abs(situation.shanten - targetShanten);
-
-                if (shantenDiff < bestDiff || (shantenDiff === bestDiff && situation.strategy === targetStrategy)) {
-                    bestDiff = shantenDiff;
-                    bestHand = hand;
-                    if (shantenDiff === 0 && situation.strategy === targetStrategy) break;
-                }
-            }
-
-            if (!bestHand) bestHand = generateRandomHand();
-
-            const discards = generateSimilarDiscards(original.discards);
-            const situation = analyzeSituation(bestHand);
-            const analysis = analyzeSafety(bestHand, discards, situation);
-            const safeTiles = [...analysis.optimal, ...analysis.safe];
-
-            return {
-                hand: bestHand,
-                discards: discards,
-                situation: situation,
-                safeTiles: safeTiles,
-                dangerousTiles: analysis.dangerous
-            };
-        }
-
-        function generateSimilarHand(origGroups, totalCount) {
-            const suits = ['man', 'pin', 'sou'];
-            const hand = [];
-
-            // 元の手牌と似た種類分布で生成
-            for (const suit of suits) {
-                const origCount = origGroups[suit] || 0;
-                // ±1のランダム変動
-                const count = Math.max(0, origCount + Math.floor(Math.random() * 3) - 1);
-                for (let i = 0; i < count && hand.length < totalCount; i++) {
-                    const number = Math.floor(Math.random() * 9) + 1;
-                    hand.push({ number, suit });
-                }
-            }
-
-            // 字牌
-            const honorCount = origGroups['honor'] || 0;
-            const newHonorCount = Math.max(0, honorCount + Math.floor(Math.random() * 3) - 1);
-            for (let i = 0; i < newHonorCount && hand.length < totalCount; i++) {
-                hand.push({ number: Math.floor(Math.random() * 7) + 1, suit: 'honor' });
-            }
-
-            // 足りない分を補充
-            while (hand.length < totalCount) {
-                const suit = suits[Math.floor(Math.random() * suits.length)];
-                hand.push({ number: Math.floor(Math.random() * 9) + 1, suit });
-            }
-
-            return sortHand(hand.slice(0, totalCount));
-        }
-
-        function generateSimilarDiscards(origDiscards) {
-            const suits = ['man', 'pin', 'sou'];
-            const discards = [];
-            const count = origDiscards.length + Math.floor(Math.random() * 3) - 1;
-
-            for (let i = 0; i < Math.max(3, count); i++) {
-                if (Math.random() < 0.3) {
-                    discards.push({ number: Math.floor(Math.random() * 7) + 1, suit: 'honor' });
-                } else {
-                    const suit = suits[Math.floor(Math.random() * suits.length)];
-                    discards.push({ number: Math.floor(Math.random() * 9) + 1, suit });
-                }
-            }
-            return discards;
-        }
-
-        // ========================================
-        // 復習画面の表示
-        // ========================================
-        function showReviewProblem() {
-            const list = document.getElementById('review-list');
-            const gameArea = document.getElementById('review-game-area');
-            list.style.display = 'none';
-            gameArea.style.display = 'flex';
-
-            // 捨て牌表示
-            const discardsEl = document.getElementById('review-discards');
-            discardsEl.innerHTML = '';
-            reviewCurrentDiscards.forEach(tile => {
-                discardsEl.appendChild(createTile(tile.number, tile.suit, false, false));
-            });
-
-            // 手牌表示
-            const handEl = document.getElementById('review-hand');
-            handEl.innerHTML = '';
-            reviewCurrentHand.forEach(tile => {
-                const el = createTile(tile.number, tile.suit, false, true);
-                el.onclick = () => selectReviewTile(el);
-                handEl.appendChild(el);
-            });
-
-            // ヒント非表示
-            document.getElementById('review-situation-section').style.display = 'none';
-            document.getElementById('review-hint-btn').disabled = false;
-            document.getElementById('review-hint-btn').textContent = 'ヒントを見る';
-
-            // フィードバック非表示
-            document.getElementById('review-feedback').classList.remove('show');
-            reviewSelectedTile = null;
-
-            // ヒント情報を準備
-            displayReviewSituation(reviewCurrentSituation);
-        }
-
-        function selectReviewTile(tile) {
-            document.querySelectorAll('#review-hand .tile.selected').forEach(t => t.classList.remove('selected'));
-            tile.classList.add('selected');
-            reviewSelectedTile = {
-                number: parseInt(tile.dataset.number),
-                suit: tile.dataset.suit
-            };
-        }
-
-        function showReviewHint() {
-            document.getElementById('review-situation-section').style.display = 'block';
-            document.getElementById('review-hint-btn').disabled = true;
-            document.getElementById('review-hint-btn').textContent = 'ヒント表示済み';
-        }
-
-        function displayReviewSituation(situation) {
-            const container = document.getElementById('review-situation-info');
-            const section = document.getElementById('review-situation-section');
-            section.className = 'situation-section';
-            if (situation.strategy === 'offensive') section.classList.add('situation-offensive');
-            else if (situation.strategy === 'defensive') section.classList.add('situation-defensive');
-
-            container.innerHTML = `
-                <div class="shanten-info">${situation.shanten}シャンテン</div>
-                <div class="strategy-info">戦略: ${getStrategyText(situation.strategy)}</div>
-                <div>${situation.description}</div>
-            `;
-        }
-
-        function checkReviewAnswer() {
-            if (!reviewSelectedTile) {
-                alert('牌を選択してください');
-                return;
-            }
-
-            const feedback = document.getElementById('review-feedback');
-            const feedbackTitle = document.getElementById('review-feedback-title');
-            const feedbackContent = document.getElementById('review-feedback-content');
-
-            const isSafe = reviewSafeTiles.some(t =>
-                t.number === reviewSelectedTile.number && t.suit === reviewSelectedTile.suit
-            );
-            const isDangerous = reviewDangerousTiles.some(t =>
-                t.number === reviewSelectedTile.number && t.suit === reviewSelectedTile.suit
-            );
-
-            let feedbackClass, title, content;
-            if (isSafe) {
-                feedbackClass = 'correct';
-                title = '正解！';
-                content = '復習の成果が出ていますね。';
-                // 正解したら復習リストから削除（元の問題の場合のみ）
-                if (!isSimilarMode && currentReviewIndex >= 0) {
-                    const problems = getIncorrectProblems();
-                    if (problems[currentReviewIndex]) {
-                        removeIncorrectProblem(problems[currentReviewIndex].id);
-                    }
-                }
-            } else if (isDangerous) {
-                feedbackClass = 'incorrect';
-                title = '危険な選択です';
-                content = 'もう一度よく考えてみましょう。';
-            } else {
-                feedbackClass = 'neutral';
-                title = '普通の選択です';
-                content = 'より良い選択肢があります。';
-            }
-
-            const alternatives = `
-                <div class="alternatives">
-                    <div class="alternatives-title">推奨される牌:</div>
-                    <div class="safe-tiles" id="review-safe-alternatives"></div>
-                    <div class="alternatives-title">危険な牌:</div>
-                    <div class="dangerous-tiles" id="review-dangerous-alternatives"></div>
-                </div>
-            `;
-
-            feedbackTitle.textContent = title;
-            feedbackContent.innerHTML = content + alternatives;
-            feedback.className = `feedback show ${feedbackClass}`;
-
-            setTimeout(() => {
-                displaySmallTiles(reviewSafeTiles, document.getElementById('review-safe-alternatives'));
-                displaySmallTiles(reviewDangerousTiles, document.getElementById('review-dangerous-alternatives'));
-            }, 100);
+            if (review.source) openReview(review.source, true);
         }
 
         function backToReviewList() {
             renderReviewList();
         }
 
-        // ========================================
-        // スコア管理クラス
-        // ========================================
-        class ScoreManager {
-            constructor() {
-                this.totalScore = 0;
-                this.loadScores();
-            }
+        function renderReviewProblem() {
+            const p = review.problem;
+            if (!p) return;
 
-            loadScores() {
-                try {
-                    this.totalScore = parseInt(localStorage.getItem('mahjong_total_score') || '0');
-                    this.updateDisplay();
-                } catch (error) {
-                    console.error('loadScores エラー:', error);
-                    this.totalScore = 0;
-                }
-            }
-
-            saveScore(points) {
-                try {
-                    this.totalScore += points;
-                    localStorage.setItem('mahjong_total_score', this.totalScore.toString());
-
-                    const dateKey = new Date().toISOString().split('T')[0];
-                    const dailyScores = JSON.parse(localStorage.getItem('mahjong_daily_scores') || '{}');
-                    if (!dailyScores[dateKey]) dailyScores[dateKey] = 0;
-                    dailyScores[dateKey] += points;
-                    localStorage.setItem('mahjong_daily_scores', JSON.stringify(dailyScores));
-
-                    const gameRecords = JSON.parse(localStorage.getItem('mahjong_game_records') || '[]');
-                    gameRecords.push({
-                        timestamp: Date.now(),
-                        score: points,
-                        hintUsed: hintUsed
-                    });
-                    if (gameRecords.length > 1000) gameRecords.splice(0, gameRecords.length - 1000);
-                    localStorage.setItem('mahjong_game_records', JSON.stringify(gameRecords));
-
-                    this.updateDisplay();
-                    saveUserDataToFirestore();
-                } catch (error) {
-                    console.error('saveScore エラー:', error);
-                }
-            }
-
-            updateDisplay() {
-                try {
-                    const currentScoreEl = document.getElementById('current-score');
-                    const totalScoreEl = document.getElementById('total-score');
-                    if (currentScoreEl) currentScoreEl.textContent = currentScore;
-                    if (totalScoreEl) totalScoreEl.textContent = this.totalScore;
-                } catch (error) {
-                    console.error('updateDisplay エラー:', error);
-                }
-            }
-        }
-
-        // ========================================
-        // ヒント表示
-        // ========================================
-        function showHint() {
-            document.getElementById('situation-section').style.display = 'block';
-            document.getElementById('hint-btn').disabled = true;
-            document.getElementById('hint-btn').textContent = 'ヒント表示済み';
-            hintUsed = true;
-        }
-
-        // ========================================
-        // スコア計算
-        // ========================================
-        function calculateScore(isCorrect, hintUsed, situation) {
-            let baseScore = 0;
-            if (isCorrect) {
-                switch (situation.strategy) {
-                    case 'offensive': baseScore = 15; break;
-                    case 'defensive': baseScore = 10; break;
-                    case 'balanced': baseScore = 12; break;
-                }
-                if (situation.shanten <= 1) baseScore += 5;
-                else if (situation.shanten >= 5) baseScore += 3;
-            } else {
-                baseScore = -3;
-            }
-            if (hintUsed) baseScore -= 5;
-            return Math.max(baseScore, -5);
-        }
-
-        // ========================================
-        // 手牌分析
-        // ========================================
-        function analyzeSituation(hand) {
-            const shanten = calculateShanten(hand);
-            const waitTiles = findWaitTiles(hand);
-            let strategy = '';
-            let description = '';
-
-            if (shanten <= 1) {
-                strategy = 'offensive';
-                description = shanten === 0
-                    ? 'テンパイ状態です。積極的に攻めて、アガリを目指しましょう。'
-                    : 'イーシャンテンです。安全度よりもテンパイを優先し、攻撃的に打ちましょう。';
-            } else if (shanten <= 3) {
-                strategy = 'balanced';
-                description = `${shanten}シャンテンです。攻めと守りのバランスを考えて打牌しましょう。`;
-            } else {
-                strategy = 'defensive';
-                description = `${shanten}シャンテンです。手が遠いので、安全重視で打ちましょう。`;
-            }
-
-            return { shanten, strategy, description, waitTiles };
-        }
-
-        function calculateShanten(hand) {
-            const groups = groupTiles(hand);
-            let mentsu = 0, tatsu = 0, pairs = 0;
-
-            ['man', 'pin', 'sou'].forEach(suit => {
-                const numbers = groups[suit] || {};
-                const counts = Array(10).fill(0);
-                Object.keys(numbers).forEach(num => { counts[parseInt(num)] = numbers[num]; });
-
-                for (let i = 1; i <= 9; i++) {
-                    while (counts[i] >= 3) { mentsu++; counts[i] -= 3; }
-                }
-                for (let i = 1; i <= 7; i++) {
-                    const min = Math.min(counts[i], counts[i+1], counts[i+2]);
-                    mentsu += min;
-                    counts[i] -= min; counts[i+1] -= min; counts[i+2] -= min;
-                }
-                for (let i = 1; i <= 9; i++) {
-                    if (counts[i] >= 2) { tatsu++; counts[i] -= 2; }
-                }
-                for (let i = 1; i <= 8; i++) {
-                    if (counts[i] >= 1 && counts[i+1] >= 1) { tatsu++; counts[i]--; counts[i+1]--; }
-                }
-                for (let i = 1; i <= 7; i++) {
-                    if (counts[i] >= 1 && counts[i+2] >= 1) { tatsu++; counts[i]--; counts[i+2]--; }
+            fillTileRow(document.getElementById('review-discards'), p.discards);
+            const handEl = document.getElementById('review-hand');
+            fillTileRow(handEl, p.hand, {
+                clickable: !review.judged,
+                selectedIndex: review.selectedIndex,
+                onSelect: (index, node) => {
+                    review.selectedIndex = index;
+                    markSelectedNode(handEl, node);
                 }
             });
 
-            if (groups.honor) {
-                Object.values(groups.honor).forEach(count => {
-                    if (count >= 3) { mentsu += Math.floor(count / 3); count = count % 3; }
-                    if (count >= 2) pairs++;
-                });
+            const section = document.getElementById('review-situation-section');
+            section.hidden = !review.hintShown;
+            applyStrategyClass(section, p.situation.strategy);
+            document.getElementById('review-situation-info').innerHTML = situationHtml(p.situation);
+
+            const hintBtn = document.getElementById('review-hint-btn');
+            hintBtn.disabled = review.hintShown;
+            hintBtn.textContent = review.hintShown ? 'ヒント表示済み' : 'ヒントを見る';
+
+            document.getElementById('review-check-btn').disabled = review.judged;
+        }
+
+        function showReviewHint() {
+            if (review.hintShown) return;
+            review.hintShown = true;
+            renderReviewProblem();
+        }
+
+        function checkReviewAnswer() {
+            const p = review.problem;
+            if (!p || review.judged) return;
+            if (review.selectedIndex === null) {
+                alert('牌を選択してください');
+                return;
             }
 
-            const hasHead = pairs > 0 ? 1 : 0;
-            return Math.max(0, 4 - mentsu + (hasHead ? 0 : 1));
-        }
+            review.judged = true;
+            const verdict = judgeTile(p, review.selectedIndex);
+            // 復習の元問題で「危険」以外を選べたら、復習リストから外す
+            if (!review.isSimilar && verdict !== 'dangerous') {
+                removeIncorrectProblem(review.source.id);
+            }
 
-        function groupTiles(hand) {
-            const groups = {};
-            hand.forEach(tile => {
-                if (!groups[tile.suit]) groups[tile.suit] = {};
-                if (!groups[tile.suit][tile.number]) groups[tile.suit][tile.number] = 0;
-                groups[tile.suit][tile.number]++;
-            });
-            return groups;
-        }
-
-        function findWaitTiles(hand) {
-            const waitTiles = [];
-            const groups = groupTiles(hand);
-            ['man', 'pin', 'sou'].forEach(suit => {
-                if (groups[suit]) {
-                    Object.keys(groups[suit]).forEach(num => {
-                        const number = parseInt(num);
-                        if (groups[suit][number] === 1 || groups[suit][number] === 2) {
-                            if (number > 1) waitTiles.push({number: number - 1, suit});
-                            if (number < 9) waitTiles.push({number: number + 1, suit});
-                        }
-                    });
-                }
-            });
-            return waitTiles.slice(0, 6);
+            renderReviewProblem();
+            showJudgement('review-feedback', { problem: p, index: review.selectedIndex, verdict });
         }
 
         // ========================================
-        // 牌の表示
+        // 成績
         // ========================================
-        const honorTiles = ['東', '南', '西', '北', '白', '發', '中'];
+        function summarize(list) {
+            const n = list.length;
+            const count = v => list.filter(r => r.verdict === v).length;
+            const optimal = count('optimal');
+            const acceptable = count('acceptable');
+            const hints = list.filter(r => r.hintUsed).length;
+            const pct = x => (n ? Math.round((x / n) * 100) : 0);
+            return {
+                n,
+                optimal,
+                acceptable,
+                dangerous: count('dangerous'),
+                accuracy: pct(optimal + acceptable),
+                bestRate: pct(optimal),
+                hintRate: pct(hints)
+            };
+        }
 
-        function createTilePattern(number, suit) {
-            if (suit === 'honor') {
-                return ['東', '南', '西', '北', '白', '発', '中'][number - 1];
-            } else if (suit === 'man') {
-                return ['1萬','2萬','3萬','4萬','5萬','6萬','7萬','8萬','9萬'][number - 1];
-            } else if (suit === 'pin') {
-                return ['◯','◯<br>◯','◯ ◯<br> ◯','◯ ◯<br>◯ ◯',
-                    '◯ ◯<br> ◯<br>◯ ◯','◯ ◯<br>◯ ◯<br>◯ ◯',
-                    '◯ ◯<br>◯ ◯<br>◯ ◯<br> ◯','◯ ◯<br>◯ ◯<br>◯ ◯<br>◯ ◯',
-                    '◯ ◯<br>◯ ◯<br>◯ ◯<br>◯ ◯<br> ◯'][number - 1];
-            } else if (suit === 'sou') {
-                return ['1索','2索','3索','4索','5索','6索','7索','8索','9索'][number - 1];
+        function statCard(value, label) {
+            return `<div class="stat-card"><div class="value">${value}</div><div class="label">${label}</div></div>`;
+        }
+
+        function breakdownRow(label, s) {
+            return `<div class="stat-row">
+                        <span>${label}</span>
+                        <div class="bar-track"><div class="bar-fill" style="width:${s.accuracy}%"></div></div>
+                        <span>${s.n ? `${s.accuracy}%（${s.n}問）` : '—'}</span>
+                    </div>`;
+        }
+
+        function dailyRowsHtml(records) {
+            const days = [];
+            for (let i = 13; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                days.push(localDateKey(d));
             }
+            const byDay = days.map(key => ({
+                key,
+                s: summarize(records.filter(r => localDateKey(new Date(r.timestamp)) === key))
+            }));
+            const max = Math.max(1, ...byDay.map(x => x.s.n));
+            return byDay.map(({ key, s }) => `
+                <div class="stat-row">
+                    <span>${key.slice(5).replace('-', '/')}</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:${(s.n / max) * 100}%"></div></div>
+                    <span>${s.n ? `${s.n}問（${s.accuracy}%）` : '—'}</span>
+                </div>`).join('');
         }
 
-        const manTileImages = {}, pinTileImages = {}, souTileImages = {}, honorTileImages = {};
+        function renderStats() {
+            const records = storage.get('mahjong_game_records', []).filter(r => r.verdict);
+            const cards = document.getElementById('stats-cards');
 
-        async function loadAllTileImages() {
-            const files = [
-                ...Array.from({length:9}, (_,i) => ({file:`p_ms${i+1}_1.gif`, obj:manTileImages, n:i+1})),
-                ...Array.from({length:9}, (_,i) => ({file:`p_ps${i+1}_1.gif`, obj:pinTileImages, n:i+1})),
-                ...Array.from({length:9}, (_,i) => ({file:`p_ss${i+1}_1.gif`, obj:souTileImages, n:i+1})),
-                {file:'p_ji_e_1.gif',obj:honorTileImages,n:1},{file:'p_ji_s_1.gif',obj:honorTileImages,n:2},
-                {file:'p_ji_w_1.gif',obj:honorTileImages,n:3},{file:'p_ji_n_1.gif',obj:honorTileImages,n:4},
-                {file:'p_ji_h_1.gif',obj:honorTileImages,n:5},{file:'p_ji_c_1.gif',obj:honorTileImages,n:6},
-                {file:'p_no_1.gif',obj:honorTileImages,n:7}
-            ];
-            const results = await Promise.allSettled(files.map(f => loadSingleImage(f.file, f.obj, f.n)));
-            const ok = results.filter(r => r.status === 'fulfilled' && r.value).length;
-            if (ok > 0) newProblem();
+            if (records.length === 0) {
+                cards.innerHTML = '<div class="empty-msg" style="grid-column:1/-1">まだ記録がありません。練習モードで問題に答えると、ここに成績が表示されます。</div>';
+                document.getElementById('stats-by-strategy').innerHTML = '';
+                document.getElementById('stats-by-difficulty').innerHTML = '';
+                document.getElementById('stats-daily').innerHTML = '';
+                return;
+            }
+
+            const s = summarize(records);
+            const totalPoints = records.reduce((sum, r) => sum + (r.score || 0), 0);
+            cards.innerHTML = [
+                statCard(`${s.n}問`, '回答数'),
+                statCard(`${s.accuracy}%`, '正答率（最適＋許容）'),
+                statCard(`${s.bestRate}%`, '最適率'),
+                statCard(`${s.hintRate}%`, 'ヒント使用率'),
+                statCard(`${totalPoints > 0 ? '+' : ''}${totalPoints}pt`, '得点合計（記録分）')
+            ].join('');
+
+            document.getElementById('stats-by-strategy').innerHTML = Object.keys(STRATEGY_LABEL)
+                .map(k => breakdownRow(STRATEGY_LABEL[k], summarize(records.filter(r => r.strategy === k)))).join('');
+            document.getElementById('stats-by-difficulty').innerHTML = Object.keys(DIFFICULTY)
+                .map(k => breakdownRow(DIFFICULTY[k].label, summarize(records.filter(r => r.difficulty === k)))).join('');
+            document.getElementById('stats-daily').innerHTML = dailyRowsHtml(records);
         }
 
-        async function loadSingleImage(filename, targetObject, number) {
+        function resetStats() {
+            if (!confirm('成績（回答記録）をリセットしますか？\n※得点・復習リストはリセットされません')) return;
+            const records = storage.get('mahjong_game_records', []).filter(r => !r.verdict);
+            storage.set('mahjong_game_records', records);
+            saveUserDataToFirestore();
+            renderStats();
+        }
+
+        // ========================================
+        // 牌画像の読み込み
+        // ========================================
+        async function loadTileImage({ file, suit, number }) {
             try {
-                const response = await fetch(filename);
-                if (!response.ok) throw new Error(response.status);
-                const blob = await response.blob();
-                const base64 = await new Promise((resolve, reject) => {
+                const res = await fetch(file);
+                if (!res.ok) return false;
+                const blob = await res.blob();
+                tileImages[suit][number] = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve(reader.result);
                     reader.onerror = reject;
                     reader.readAsDataURL(blob);
                 });
-                targetObject[number] = base64;
                 return true;
-            } catch (e) { return false; }
-        }
-
-        function createTile(number, suit, isSmall = false, isClickable = true) {
-            const tile = document.createElement('div');
-            tile.className = `tile ${suit} ${isSmall ? 'small-tile' : ''}`;
-            if (!isClickable) tile.classList.add('not-selectable');
-
-            let imageData = null;
-            if (suit === 'man') imageData = manTileImages[number];
-            else if (suit === 'pin') imageData = pinTileImages[number];
-            else if (suit === 'sou') imageData = souTileImages[number];
-            else if (suit === 'honor') imageData = honorTileImages[number];
-
-            if (imageData) {
-                tile.innerHTML = `<img src="${imageData}" alt="${number}${suit}" class="tile-image" />`;
-            } else {
-                const pattern = createTilePattern(number, suit);
-                const cls = suit === 'man' ? 'man-pattern' : suit === 'pin' ? 'pin-pattern' : suit === 'sou' ? 'sou-pattern' : '';
-                tile.innerHTML = `<span class="tile-pattern ${cls}">${pattern}</span>`;
-            }
-
-            tile.dataset.number = number;
-            tile.dataset.suit = suit;
-            if (isClickable && !isSmall) tile.onclick = () => selectTile(tile);
-            return tile;
-        }
-
-        function selectTile(tile) {
-            document.querySelectorAll('#hand .tile.selected').forEach(t => t.classList.remove('selected'));
-            tile.classList.add('selected');
-            selectedTile = {
-                number: parseInt(tile.dataset.number),
-                suit: tile.dataset.suit
-            };
-        }
-
-        // ========================================
-        // 手牌・捨て牌生成
-        // ========================================
-        function generateRandomHand() {
-            const suits = ['man', 'pin', 'sou'];
-            const hand = [];
-            for (let i = 0; i < 10; i++) {
-                hand.push({ number: Math.floor(Math.random() * 9) + 1, suit: suits[Math.floor(Math.random() * suits.length)] });
-            }
-            const honorCount = Math.floor(Math.random() * 3) + 1;
-            for (let i = 0; i < honorCount; i++) {
-                hand.push({ number: Math.floor(Math.random() * 7) + 1, suit: 'honor' });
-            }
-            return sortHand(hand.slice(0, 13));
-        }
-
-        function sortHand(hand) {
-            const suitOrder = { man: 0, pin: 1, sou: 2, honor: 3 };
-            return hand.sort((a, b) => suitOrder[a.suit] !== suitOrder[b.suit] ? suitOrder[a.suit] - suitOrder[b.suit] : a.number - b.number);
-        }
-
-        function generateDiscards() {
-            const suits = ['man', 'pin', 'sou'];
-            const discards = [];
-            const count = Math.floor(Math.random() * 4) + 5;
-            for (let i = 0; i < count; i++) {
-                if (Math.random() < 0.3) {
-                    discards.push({ number: Math.floor(Math.random() * 7) + 1, suit: 'honor' });
-                } else {
-                    discards.push({ number: Math.floor(Math.random() * 9) + 1, suit: suits[Math.floor(Math.random() * suits.length)] });
-                }
-            }
-            return discards;
-        }
-
-        // ========================================
-        // 安全牌分析
-        // ========================================
-        function analyzeSafety(hand, discards, situation) {
-            const safe = [], dangerous = [], optimal = [];
-
-            hand.forEach(tile => {
-                let isSafe = false;
-
-                if (tile.suit === 'honor') {
-                    isSafe = discards.some(d => d.suit === 'honor' && d.number === tile.number);
-                } else {
-                    if (discards.some(d => d.suit === tile.suit && d.number === tile.number)) {
-                        isSafe = true;
-                    } else if (tile.number === 1 || tile.number === 9) {
-                        const nearbyDiscarded = discards.some(d => d.suit === tile.suit && Math.abs(d.number - tile.number) <= 2);
-                        isSafe = !nearbyDiscarded || Math.random() < 0.6;
-                    } else if (tile.number >= 4 && tile.number <= 6) {
-                        isSafe = discards.filter(d => d.suit === tile.suit).length > 2 && Math.random() < 0.3;
-                    } else {
-                        isSafe = discards.filter(d => d.suit === tile.suit).length > 1 && Math.random() < 0.4;
-                    }
-                }
-
-                let isOptimal = false;
-                if (situation.strategy === 'offensive') {
-                    isOptimal = isUnnecessaryTile(tile, hand, situation) && !isExtremelyDangerous(tile, discards);
-                } else if (situation.strategy === 'defensive') {
-                    isOptimal = isSafe;
-                } else {
-                    isOptimal = isSafe && isUnnecessaryTile(tile, hand, situation);
-                }
-
-                if (isOptimal) optimal.push(tile);
-                else if (isSafe) safe.push(tile);
-                else dangerous.push(tile);
-            });
-
-            return { safe, dangerous, optimal };
-        }
-
-        function isUnnecessaryTile(tile, hand, situation) {
-            const groups = groupTiles(hand);
-            const suitGroup = groups[tile.suit];
-            if (!suitGroup) return true;
-            const count = suitGroup[tile.number] || 0;
-            if (count === 1 && tile.suit !== 'honor') {
-                const l = suitGroup[tile.number - 1] || 0;
-                const r = suitGroup[tile.number + 1] || 0;
-                const fl = suitGroup[tile.number - 2] || 0;
-                const fr = suitGroup[tile.number + 2] || 0;
-                if (l === 0 && r === 0 && fl === 0 && fr === 0) return true;
-            }
-            return false;
-        }
-
-        function isExtremelyDangerous(tile, discards) {
-            if (tile.suit === 'honor') return false;
-            if (tile.number >= 4 && tile.number <= 6) {
-                return !discards.some(d => d.suit === tile.suit && d.number === tile.number);
-            }
-            return false;
-        }
-
-        // ========================================
-        // 表示ヘルパー
-        // ========================================
-        function displaySmallTiles(tiles, container) {
-            if (!container || !tiles || !Array.isArray(tiles)) return;
-            container.innerHTML = '';
-            container.style.display = 'flex';
-            container.style.flexWrap = 'wrap';
-            container.style.gap = '5px';
-            tiles.forEach(tile => {
-                if (tile && tile.number && tile.suit) {
-                    container.appendChild(createTile(tile.number, tile.suit, true, false));
-                }
-            });
-        }
-
-        function getStrategyText(strategy) {
-            switch (strategy) {
-                case 'offensive': return '攻撃重視';
-                case 'defensive': return '安全重視';
-                case 'balanced': return 'バランス';
-                default: return 'バランス';
+            } catch (e) {
+                return false;
             }
         }
 
-        // ========================================
-        // メイン：新しい問題
-        // ========================================
-        function newProblem() {
-            try {
-                currentHand = generateRandomHand();
-                currentDiscards = generateDiscards();
-                currentSituation = analyzeSituation(currentHand);
-                hintUsed = false;
-
-                const analysis = analyzeSafety(currentHand, currentDiscards, currentSituation);
-                safeTiles = [...analysis.optimal, ...analysis.safe];
-                dangerousTiles = analysis.dangerous;
-
-                // 捨て牌
-                const discardsEl = document.getElementById('discards');
-                discardsEl.innerHTML = '';
-                currentDiscards.forEach(tile => {
-                    discardsEl.appendChild(createTile(tile.number, tile.suit, false, false));
-                });
-
-                // 手牌
-                const handEl = document.getElementById('hand');
-                handEl.innerHTML = '';
-                currentHand.forEach(tile => {
-                    handEl.appendChild(createTile(tile.number, tile.suit, false, true));
-                });
-
-                displaySituation(currentSituation);
-
-                // リセット
-                document.getElementById('situation-section').style.display = 'none';
-                const hintBtn = document.getElementById('hint-btn');
-                if (hintBtn) { hintBtn.disabled = false; hintBtn.textContent = 'ヒントを見る (-5pt)'; }
-                selectedTile = null;
-                const feedbackEl = document.getElementById('feedback');
-                if (feedbackEl) feedbackEl.classList.remove('show');
-                // 「新しい問題」ボタンを非表示にリセット
-                const newProblemBtn = document.getElementById('new-problem-btn');
-                if (newProblemBtn) newProblemBtn.style.display = 'none';
-            } catch (error) {
-                console.error('newProblem エラー:', error);
-            }
-        }
-
-        function displaySituation(situation) {
-            try {
-                const container = document.getElementById('situation-info');
-                const sectionElement = document.querySelector('#practice-panel .situation-section');
-                if (!container || !sectionElement) return;
-
-                sectionElement.className = 'situation-section';
-                if (situation.strategy === 'offensive') sectionElement.classList.add('situation-offensive');
-                else if (situation.strategy === 'defensive') sectionElement.classList.add('situation-defensive');
-
-                let waitTilesHtml = '';
-                if (situation.waitTiles && situation.waitTiles.length > 0) {
-                    waitTilesHtml = `
-                        <div style="margin-top:15px;"><strong>推定待ち牌:</strong></div>
-                        <div class="wait-tiles" id="wait-tiles" style="margin-top:5px;"></div>
-                    `;
-                }
-
-                container.innerHTML = `
-                    <div class="shanten-info">${situation.shanten}シャンテン</div>
-                    <div class="strategy-info">戦略: ${getStrategyText(situation.strategy)}</div>
-                    <div style="margin-bottom:10px;">${situation.description}</div>
-                    ${waitTilesHtml}
-                `;
-
-                if (situation.waitTiles && situation.waitTiles.length > 0) {
-                    setTimeout(() => {
-                        const waitContainer = document.getElementById('wait-tiles');
-                        if (waitContainer) displaySmallTiles(situation.waitTiles, waitContainer);
-                    }, 100);
-                }
-            } catch (error) {
-                console.error('displaySituation エラー:', error);
-            }
-        }
-
-        // ========================================
-        // 判定
-        // ========================================
-        function checkAnswer() {
-            if (!selectedTile) {
-                alert('牌を選択してください');
-                return;
-            }
-
-            const feedback = document.getElementById('feedback');
-            const feedbackTitle = document.getElementById('feedback-title');
-            const feedbackContent = document.getElementById('feedback-content');
-
-            const isSafe = safeTiles.some(t => t.number === selectedTile.number && t.suit === selectedTile.suit);
-            const isDangerous = dangerousTiles.some(t => t.number === selectedTile.number && t.suit === selectedTile.suit);
-
-            const earnedPoints = calculateScore(isSafe, hintUsed, currentSituation);
-            currentScore += earnedPoints;
-            scoreManager.saveScore(earnedPoints);
-
-            let feedbackClass, title, content;
-
-            if (isSafe) {
-                feedbackClass = 'correct';
-                title = `良い判断です！ +${earnedPoints}pt`;
-                content = `${currentSituation.strategy === 'offensive' ? '攻撃的な状況' : currentSituation.strategy === 'defensive' ? '守備的な状況' : 'バランス重視の状況'}において適切な選択です。`;
-            } else if (isDangerous) {
-                feedbackClass = 'incorrect';
-                title = `危険な選択です ${earnedPoints}pt`;
-                content = 'リスクが高すぎます。より良い選択肢があります。';
-                // 間違えた問題を保存
-                saveIncorrectProblem(currentHand, currentDiscards, currentSituation, selectedTile, safeTiles, dangerousTiles);
-            } else {
-                feedbackClass = 'neutral';
-                title = `普通の選択です ${earnedPoints}pt`;
-                content = '悪くはありませんが、より良い選択肢があります。';
-                // 最適でない選択も保存
-                saveIncorrectProblem(currentHand, currentDiscards, currentSituation, selectedTile, safeTiles, dangerousTiles);
-            }
-
-            const alternatives = `
-                <div class="alternatives">
-                    <div class="alternatives-title">推奨される牌（${getStrategyText(currentSituation.strategy)}）:</div>
-                    <div class="safe-tiles" id="safe-alternatives"></div>
-                    <div class="alternatives-title">危険な牌:</div>
-                    <div class="dangerous-tiles" id="dangerous-alternatives"></div>
-                </div>
-            `;
-
-            const explanation = `
-                <div class="explanation">
-                    <strong>状況分析:</strong><br>
-                    ・${currentSituation.shanten}シャンテン（${getStrategyText(currentSituation.strategy)}）<br>
-                    ・${currentSituation.strategy === 'offensive' ?
-                        '多少のリスクを取ってでも手を進めることが重要' :
-                        currentSituation.strategy === 'defensive' ?
-                        '安全性を最優先に考える' :
-                        '攻めと守りのバランスを取る'}<br>
-                    ・既に捨てられている牌（現物）は安全<br>
-                    ・1,9牌は比較的安全<br>
-                    ・5牌周辺（3〜7）は危険度が高い<br>
-                    ${hintUsed ? '・ヒント使用のため-5pt' : '・ヒント未使用ボーナス'}
-                </div>
-            `;
-
-            feedbackTitle.textContent = title;
-            feedbackContent.innerHTML = content + alternatives + explanation;
-            feedback.className = `feedback show ${feedbackClass}`;
-
-            setTimeout(() => {
-                displaySmallTiles(safeTiles, document.getElementById('safe-alternatives'));
-                displaySmallTiles(dangerousTiles, document.getElementById('dangerous-alternatives'));
-            }, 100);
-
-            // 判定後に「新しい問題」ボタンを表示
-            document.getElementById('new-problem-btn').style.display = '';
+        async function loadAllTileImages() {
+            await Promise.allSettled(TILE_IMAGE_FILES.map(loadTileImage));
+            // 画像が読み込めたら、表示中の問題を画像付きで描き直す（問題は変えない）
+            renderPractice();
+            if (review.problem) renderReviewProblem();
         }
 
         // ========================================
         // 初期化
         // ========================================
-        scoreManager = new ScoreManager();
-        newProblem();
-        updateReviewBadge();
+        function init() {
+            const saved = storage.get('mahjong_difficulty', 'intermediate');
+            practice.difficulty = DIFFICULTY[saved] ? saved : 'intermediate';
+            updateDifficultyButtons();
+            updateReviewBadge();
+            updateScoreDisplay();
+            newPracticeProblem();
+        }
 
-        window.addEventListener('load', async () => {
-            await loadAllTileImages();
-        });
+        init();
+        window.addEventListener('load', loadAllTileImages);
     </script>
 </body>
 </html>
