@@ -285,21 +285,19 @@
                 <div class="discards" id="discards"></div>
             </div>
 
-            <div class="situation-section" id="situation-section" hidden>
-                <div class="situation-title">あなたの状況（ヒント）</div>
-                <div class="situation-info" id="situation-info"></div>
-            </div>
-
-            <div class="hint-controls">
-                <button class="btn btn-hint" id="hint-btn" onclick="showHint()">ヒントを見る (-5pt)</button>
-            </div>
-
             <div class="hand-section">
                 <div class="hand-title">あなたの手牌（状況を考慮して適切な牌をクリックしてください）</div>
                 <div class="hand" id="hand"></div>
 
                 <div class="controls">
+                    <button class="btn btn-hint" id="hint-btn" onclick="showHint()">ヒントを見る (-5pt)</button>
                     <button class="btn btn-primary" id="check-btn" onclick="checkPracticeAnswer()">判定</button>
+                </div>
+
+                <!-- ヒントは「ヒントを見る」ボタンの近くに表示 -->
+                <div class="situation-section" id="situation-section" hidden>
+                    <div class="situation-title">あなたの状況（ヒント）</div>
+                    <div class="situation-info" id="situation-info"></div>
                 </div>
 
                 <!-- 判定結果は判定ボタンの直下に表示 -->
@@ -334,21 +332,19 @@
                     <div class="discards" id="review-discards"></div>
                 </div>
 
-                <div class="situation-section" id="review-situation-section" hidden>
-                    <div class="situation-title">あなたの状況（ヒント）</div>
-                    <div class="situation-info" id="review-situation-info"></div>
-                </div>
-
-                <div class="hint-controls">
-                    <button class="btn btn-hint" id="review-hint-btn" onclick="showReviewHint()">ヒントを見る</button>
-                </div>
-
                 <div class="hand-section">
                     <div class="hand-title">あなたの手牌</div>
                     <div class="hand" id="review-hand"></div>
                     <div class="controls">
+                        <button class="btn btn-hint" id="review-hint-btn" onclick="showReviewHint()">ヒントを見る</button>
                         <button class="btn btn-primary" id="review-check-btn" onclick="checkReviewAnswer()">判定</button>
                         <button class="btn btn-warning" onclick="loadSimilarProblem()">類題を出す</button>
+                    </div>
+
+                    <!-- ヒントは「ヒントを見る」ボタンの近くに表示 -->
+                    <div class="situation-section" id="review-situation-section" hidden>
+                        <div class="situation-title">あなたの状況（ヒント）</div>
+                        <div class="situation-info" id="review-situation-info"></div>
                     </div>
 
                     <!-- 判定結果は判定ボタンの直下に表示 -->
